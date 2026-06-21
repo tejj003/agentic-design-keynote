@@ -50,8 +50,14 @@ body{font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--blac
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
 
-/* ─── DECK ─── */
-.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+/* ─── DECK (fixed 1920×1080 stage, scaled to fit any window) ─── */
+.deck{
+  position:absolute;top:50%;left:50%;
+  width:1920px;height:1080px;
+  transform-origin:center center;
+  transform:translate(-50%,-50%) scale(var(--deck-scale,1));
+  overflow:hidden;background:#000;
+}
 
 /* ─── SLIDE ─── */
 .slide{
@@ -242,21 +248,21 @@ body{font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--blac
 .s-blue .eyebrow,.s-deep .eyebrow,.s-navy .eyebrow{color:rgba(255,255,255,.7)}
 .eyebrow::before{content:'';display:inline-block;width:18px;height:2px;background:currentColor;flex-shrink:0}
 
-h1{font-family:var(--cond);font-weight:700;font-size:clamp(56px,7vw,112px);line-height:1.02;letter-spacing:-.8px;margin-bottom:14px}
-h2{font-family:var(--cond);font-weight:700;font-size:clamp(36px,4.5vw,74px);line-height:1.05;letter-spacing:-.4px;margin-bottom:10px}
-h3{font-family:var(--cond);font-weight:600;font-size:clamp(20px,2.2vw,32px);line-height:1.1;margin-bottom:4px}
+h1{font-family:var(--cond);font-weight:700;font-size:112px;line-height:1.02;letter-spacing:-.8px;margin-bottom:14px}
+h2{font-family:var(--cond);font-weight:700;font-size:74px;line-height:1.05;letter-spacing:-.4px;margin-bottom:10px}
+h3{font-family:var(--cond);font-weight:600;font-size:32px;line-height:1.1;margin-bottom:4px}
 h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:5px}
 .s-dark h4,.s-mid h4{color:var(--b40)}
 .s-blue h4,.s-deep h4,.s-navy h4{color:rgba(255,255,255,.7)}
-.lead{font-size:clamp(18px,1.7vw,28px);line-height:1.5;color:var(--g80);max-width:880px}
+.lead{font-size:28px;line-height:1.5;color:var(--g80);max-width:880px}
 .s-dark .lead,.s-mid .lead,.s-blue .lead,.s-deep .lead,.s-navy .lead{color:rgba(255,255,255,.8)}
-.kicker{font-size:clamp(15px,1.3vw,20px);line-height:1.5;color:var(--g70)}
+.kicker{font-size:20px;line-height:1.5;color:var(--g70)}
 .s-dark .kicker,.s-mid .kicker,.s-blue .kicker,.s-deep .kicker,.s-navy .kicker{color:rgba(255,255,255,.6)}
 
 /* ─── HERO NUMBER ─── */
 .hero-num{
   font-family:var(--cond);font-weight:700;
-  font-size:clamp(80px,12vw,180px);
+  font-size:180px;
   line-height:.9;letter-spacing:-4px;
   color:var(--b60);
   animation:numPop .7s var(--bounce) both;
@@ -270,7 +276,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 .stat-cell{padding:18px 22px;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:4px}
 .s-light .stat-cell,.s-gray .stat-cell{border-right-color:var(--g20)}
 .stat-cell:last-child{border-right:none}
-.stat-n{font-family:var(--cond);font-weight:700;font-size:clamp(34px,5vw,70px);line-height:.95;color:var(--b60)}
+.stat-n{font-family:var(--cond);font-weight:700;font-size:70px;line-height:.95;color:var(--b60)}
 .s-dark .stat-n,.s-mid .stat-n{color:var(--b40)}
 .s-blue .stat-n,.s-deep .stat-n,.s-navy .stat-n{color:#fff}
 .stat-l{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70)}
@@ -305,7 +311,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 .s-blue .card:hover{background:rgba(255,255,255,.17)}
 .s-deep .card{background:rgba(255,255,255,.08)}
 .s-deep .card:hover{background:rgba(255,255,255,.14)}
-.card h3{font-size:clamp(16px,1.6vw,22px)}
+.card h3{font-size:22px}
 .card p{font-size:16px;line-height:1.5;color:var(--g50)}
 .s-dark .card p,.s-mid .card p{color:rgba(255,255,255,.55)}
 .s-blue .card p,.s-deep .card p{color:rgba(255,255,255,.75)}
@@ -330,14 +336,14 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 .compare-col{display:flex;flex-direction:column}
 .compare-head{
   padding:20px 28px;
-  font-family:var(--cond);font-size:clamp(22px,2.1vw,30px);font-weight:700;
+  font-family:var(--cond);font-size:30px;font-weight:700;
   display:flex;align-items:center;gap:10px;
 }
 .compare-old .compare-head{background:var(--g90);color:var(--g30)}
 .compare-new .compare-head{background:var(--b60);color:#fff}
 .compare-row{
   flex:1;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);
-  font-size:clamp(18px,1.6vw,24px);line-height:1.4;
+  font-size:24px;line-height:1.4;
   display:flex;align-items:center;gap:12px;
 }
 .s-light .compare-row,.s-gray .compare-row{border-bottom-color:var(--g20)}
@@ -352,7 +358,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 .bl{list-style:none}
 .bl li{
   position:relative;padding:8px 0 8px 22px;
-  font-size:clamp(17px,1.5vw,24px);line-height:1.5;
+  font-size:24px;line-height:1.5;
   border-bottom:1px solid rgba(255,255,255,.06);
 }
 .s-light .bl li,.s-gray .bl li{border-bottom-color:var(--g20)}
@@ -372,7 +378,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 }
 .s-dark .quote,.s-mid .quote{background:rgba(15,98,254,.14);border-left-color:var(--b40)}
 .s-blue .quote,.s-deep .quote,.s-navy .quote{background:rgba(255,255,255,.1);border-left-color:rgba(255,255,255,.6)}
-.quote-text{font-size:clamp(17px,1.5vw,22px);line-height:1.6;font-style:italic}
+.quote-text{font-size:22px;line-height:1.6;font-style:italic}
 .s-dark .quote-text,.s-mid .quote-text{color:var(--g20)}
 .s-blue .quote-text,.s-deep .quote-text,.s-navy .quote-text{color:#fff}
 .quote-attr{font-family:var(--mono);font-size:11px;color:var(--g70);margin-top:5px}
@@ -401,7 +407,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 .shift-row{
   display:flex;align-items:center;gap:14px;padding:9px 0;
   border-bottom:1px solid rgba(255,255,255,.06);
-  font-size:clamp(17px,1.5vw,24px);
+  font-size:24px;
   transition:transform .15s ease;
 }
 .s-light .shift-row,.s-gray .shift-row{border-bottom-color:var(--g20)}
@@ -460,7 +466,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 }
 .map-row:last-child{border-bottom:none}
 .s-dark .map-row,.s-mid .map-row{border-bottom-color:rgba(255,255,255,.08)}
-.map-bad,.map-good{display:flex;align-items:center;gap:10px;font-size:clamp(15px,1.3vw,19px);line-height:1.35}
+.map-bad,.map-good{display:flex;align-items:center;gap:10px;font-size:19px;line-height:1.35}
 .map-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .map-link{color:var(--b40);text-align:center;font-size:18px}
 .s-light .map-link,.s-gray .map-link{color:var(--b60)}
@@ -468,7 +474,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 .bg-glyph{
   position:absolute;pointer-events:none;z-index:0;
   font-family:var(--cond);font-weight:700;line-height:.8;
-  font-size:clamp(220px,34vw,460px);
+  font-size:460px;
   color:var(--b60);opacity:.05;
   right:-2%;bottom:-12%;user-select:none;
 }
@@ -569,17 +575,17 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 60px 20px;position:relative;z-index:1">
 
   <div style="overflow:hidden;margin-bottom:6px;padding-bottom:.16em">
-    <h1 data-a="2" style="font-size:clamp(84px,11vw,176px);color:#fff;line-height:.95">
+    <h1 data-a="2" style="font-size:176px;color:#fff;line-height:.95">
       Architecting
     </h1>
   </div>
   <div style="overflow:hidden;margin-bottom:6px;padding-bottom:.16em">
-    <h1 data-a="3" style="font-size:clamp(84px,11vw,176px);color:var(--b40);line-height:.95">
+    <h1 data-a="3" style="font-size:176px;color:var(--b40);line-height:.95">
       Intent
     </h1>
   </div>
   <div style="overflow:hidden">
-    <h2 data-a="4" style="color:var(--g50);font-weight:300;font-size:clamp(30px,3.4vw,52px)">
+    <h2 data-a="4" style="color:var(--g50);font-weight:300;font-size:52px">
       The Rise of the Agentic Designer
     </h2>
   </div>
@@ -617,7 +623,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <div data-a="1" style="background:var(--black);color:var(--white);padding:30px 26px;display:flex;flex-direction:column;justify-content:space-between;position:relative;z-index:1;border-right:1px solid var(--g90)">
     <div>
       <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--b40);margin-bottom:10px">Featured Speaker</p>
-      <h2 style="font-size:clamp(34px,4.2vw,56px);line-height:.95;color:#fff;margin-bottom:8px">TEJJ</h2>
+      <h2 style="font-size:56px;line-height:.95;color:#fff;margin-bottom:8px">TEJJ</h2>
       <p style="font-family:var(--cond);font-size:20px;line-height:1.2;color:var(--g30);margin-bottom:14px">Data Artist<br>Writer<br>Product Designer</p>
       <div style="display:flex;gap:10px;align-items:center;color:var(--b40);font-size:18px">
         <span>&#9670;</span><span>&#9673;</span><span>&#10022;</span><span>&#10042;</span><span>&#9702;</span>
@@ -634,7 +640,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 
   <div style="padding:22px 52px 18px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;gap:11px">
     <div data-a="2" class="eyebrow" style="font-size:11px;letter-spacing:2px">About Me</div>
-    <h2 data-a="3" style="max-width:1020px;font-family:var(--sans);font-weight:600;font-size:clamp(28px,3vw,42px);line-height:1.08;letter-spacing:-.2px">Tejj is a data artist, writer, and award-winning product designer building intuitive systems for Fortune 500 companies and fast-moving startups.</h2>
+    <h2 data-a="3" style="max-width:1020px;font-family:var(--sans);font-weight:600;font-size:42px;line-height:1.08;letter-spacing:-.2px">Tejj is a data artist, writer, and award-winning product designer building intuitive systems for Fortune 500 companies and fast-moving startups.</h2>
 
     <div data-a="4" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g20)">
       <div style="background:var(--white);padding:13px 18px;border-top:4px solid var(--b60)">
@@ -832,22 +838,22 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <!-- Giant stat block -->
   <div data-a="3" style="display:grid;grid-template-columns:repeat(4,1fr);flex:1;min-height:0;margin-top:20px;gap:1px;background:var(--g20)">
     <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b60);position:relative;overflow:hidden">
-      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b60);letter-spacing:-3px">50%</div>
+      <div style="font-family:var(--cond);font-size:120px;font-weight:700;line-height:.85;color:var(--b60);letter-spacing:-3px">50%</div>
       <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Faster to Working UI</div>
       <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Architected context lets agents move from intent to interface in roughly half the time</p>
     </div>
     <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b60);position:relative;overflow:hidden">
-      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b60);letter-spacing:-3px">30%</div>
+      <div style="font-family:var(--cond);font-size:120px;font-weight:700;line-height:.85;color:var(--b60);letter-spacing:-3px">30%</div>
       <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Higher Team Throughput</div>
       <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Routine production shifts to agents, freeing designers for intent and behavior</p>
     </div>
     <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b40);position:relative;overflow:hidden">
-      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b40);letter-spacing:-3px">20h</div>
+      <div style="font-family:var(--cond);font-size:120px;font-weight:700;line-height:.85;color:var(--b40);letter-spacing:-3px">20h</div>
       <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Reclaimed per Week</div>
       <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Repetitive, well-defined tasks delegated to reliable agentic loops</p>
     </div>
     <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b40);position:relative;overflow:hidden">
-      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b40);letter-spacing:-3px">25%</div>
+      <div style="font-family:var(--cond);font-size:120px;font-weight:700;line-height:.85;color:var(--b40);letter-spacing:-3px">25%</div>
       <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Fewer Errors &amp; Escalations</div>
       <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Confidence signals, guardrails, and recovery states prevent costly dead ends</p>
     </div>
@@ -944,7 +950,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 
 <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 60px;position:relative;z-index:1">
   <div data-a="1" class="eyebrow" style="color:rgba(255,255,255,.6)">The Designer&rsquo;s Craft</div>
-  <h1 data-a="2" style="color:#fff;max-width:84%;font-size:clamp(44px,6vw,92px)">
+  <h1 data-a="2" style="color:#fff;max-width:84%;font-size:92px">
     Designing How Intelligent Systems Behave, Recover, and Earn Trust
   </h1>
   <div data-a="3" style="width:480px;height:2px;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.15) 100%);margin:20px 0"></div>
@@ -955,21 +961,21 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
         <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-family:var(--mono);font-size:12px;font-weight:600;color:#fff">01</span>
         <span style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--b20)">Framework</span>
       </div>
-      <div style="font-family:var(--cond);font-size:clamp(17px,1.5vw,22px);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">The 5 Layers of Agentic Design</div>
+      <div style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">The 5 Layers of Agentic Design</div>
     </div>
     <div style="background:var(--b70);padding:18px 22px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-family:var(--mono);font-size:12px;font-weight:600;color:#fff">02</span>
         <span style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--b20)">Responsibility</span>
       </div>
-      <div style="font-family:var(--cond);font-size:clamp(17px,1.5vw,22px);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">Designing for Trust</div>
+      <div style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">Designing for Trust</div>
     </div>
     <div style="background:var(--b70);padding:18px 22px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-family:var(--mono);font-size:12px;font-weight:600;color:#fff">03</span>
         <span style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--b20)">Resilience</span>
       </div>
-      <div style="font-family:var(--cond);font-size:clamp(17px,1.5vw,22px);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">Designing for Failure</div>
+      <div style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">Designing for Failure</div>
     </div>
   </div>
 </div>
@@ -1527,7 +1533,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <div style="flex:1;padding:28px 44px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--g20);position:relative;overflow:hidden">
     <div class="bg-glyph" style="color:var(--b60);opacity:.05">&#9670;</div>
     <div data-a="1" class="kchip" style="position:relative;z-index:1">Vision</div>
-    <h2 data-a="2" style="font-size:clamp(28px,4vw,52px);position:relative;z-index:1;margin-top:8px">From Drawing Pixels to Designing Parameters, Rules, and Guardrails</h2>
+    <h2 data-a="2" style="font-size:52px;position:relative;z-index:1;margin-top:8px">From Drawing Pixels to Designing Parameters, Rules, and Guardrails</h2>
     <div data-a="3" style="width:300px;height:3px;background:linear-gradient(90deg,var(--b60) 0%,rgba(15,98,254,.15) 100%);margin:14px 0;position:relative;z-index:1"></div>
     <ul data-a="4" class="bl" style="position:relative;z-index:1;font-size:17px">
       <li>Encode behavior boundaries and escalation triggers</li>
@@ -1659,7 +1665,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <!-- Thank you -->
   <div style="position:relative;z-index:1">
     <div data-a="1" class="kchip" style="color:var(--b40)">Thank You</div>
-    <h1 data-a="2" style="color:#fff;max-width:90%;font-size:clamp(34px,4.4vw,64px);margin-top:8px">
+    <h1 data-a="2" style="color:#fff;max-width:90%;font-size:64px;margin-top:8px">
       Design is no longer only about what a user sees.
       <span style="color:var(--b40)">It is about what a system understands.</span>
     </h1>
@@ -1945,6 +1951,15 @@ try {
   }
 } catch(e) {}
 upN();
+
+// Scale the fixed 1920×1080 deck to fit the window (letterboxed, identical proportions at any size).
+const DECK = document.getElementById('deck');
+function fitDeck(){
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  DECK.style.setProperty('--deck-scale', s);
+}
+window.addEventListener('resize', fitDeck);
+fitDeck();
 
 // In preview mode, ask the presenter deck for the current slide so we stay in sync.
 if (PREVIEW && chan) {
