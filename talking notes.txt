@@ -1,0 +1,141 @@
+Talking Notes for the Deck
+Architecting Intent: The Rise of the Agentic Designers
+Slide 1: Title Slide
+Architecting Intent: The Rise of the Agentic Designers
+
+Talking notes:
+Good morning everyone. I’m really excited to be here at IIT Hyderabad because I think this is exactly the kind of room where the future gets shaped early. Today’s session is about a massive shift happening right now in design, technology, and product thinking. For a long time, we thought design meant shaping interfaces, making things intuitive, usable, and beautiful. But now, with the rise of AI systems that can reason, act, code, revise, and collaborate, the role of the designer is expanding very fast. This session is about that shift. It is about moving from prompting AI to architecting intent. It is about how designers are becoming people who shape behavior, intelligence, trust, and outcomes.
+
+Slide 2: The Big Shift
+We are no longer just designing products. We are designing systems that can think, decide, act, and evolve.
+
+Talking notes:
+This is the central idea of the whole talk. Earlier, products were mostly passive. A user clicked something, and the product responded. The intelligence was limited, and the flow was mostly fixed. Now that is changing. Systems are beginning to interpret goals, take action, make decisions, and even improve over time. That means the design challenge is no longer just about the screen the user sees. It is about what the system understands behind that screen. So the real shift is this: earlier we designed interaction. Now we are increasingly designing behavior. Earlier we designed screens. Now we are designing systems that can act.
+
+Slide 3: Why This Matters Now
+The boundary between designing and building is collapsing.
+
+Talking notes:
+This matters now because the traditional separation between roles is becoming weaker. Earlier, a designer designed, a developer built, and the product manager defined the requirements. But today, AI tools are compressing these boundaries. A designer can now go from idea to flow to prototype to code much faster. And more importantly, AI can participate in each of those steps. It can help explore possibilities, draft interfaces, write components, test states, and suggest improvements. So the role itself is changing. The designer is no longer only responsible for visual or interaction quality. The designer is now influencing logic, context, system behavior, and even execution. That is why this conversation is important right now, especially for students who are going to enter the industry in the next few years.
+
+Slide 4: From Generative to Agentic
+Generative AI gives you outputs. Agentic AI pursues outcomes.
+
+Talking notes:
+We all know generative AI. You give it a prompt, and it gives you something back. It could be an image, a paragraph, a wireframe, a UI concept, or a piece of code. That was the first big wave. But now we are moving into the agentic phase. In the generative phase, AI mostly reacts. In the agentic phase, AI can reason through multiple steps. It can understand a goal, make a plan, use tools, check results, and correct itself. That is a very different kind of relationship. Instead of asking for one output, you are now setting up a system that can work toward an outcome. That is a huge shift because it means the quality of the result depends much more on the context, constraints, and logic you design around the system.
+
+Slide 5: So What Changes for Designers?
+Everything important.
+
+Talking notes:
+This is where the role becomes exciting. The designer is no longer just deciding where the button goes or how the layout should feel. Those things still matter, but they are no longer the whole story. Now the designer must ask bigger questions. When should the system act automatically? When should it pause and ask the user? What information should it use before making a recommendation? How should it communicate uncertainty? What does a helpful failure look like? These are not just UI questions. These are system behavior questions. So I believe the designer of the future is not only a visual thinker. They are also a behavior architect, a systems thinker, and a shaper of trust.
+
+Slide 6: Meet the Agentic Designer
+An Agentic Designer is someone who designs how intelligent systems behave, collaborate, recover, and earn trust.
+
+Talking notes:
+This is the term I want everyone to remember from this session: Agentic Designer. An agentic designer does not stop at the interface. They think about how the intelligence underneath should work. They define the goal, the context, the behavior, the boundaries, and the fallback paths. They think about how humans and AI collaborate. They think about when the AI should act, when it should wait, and when it should escalate. In simple words, an agentic designer is not just designing what the product looks like. They are designing how the product thinks and how it behaves in the real world. That is a much more powerful role.
+
+Slide 7: The Core Shift
+Stop Prompting, Start Architecting
+
+Talking notes:
+This is probably the most important mindset shift in the talk. A lot of people still treat AI as a machine they talk to. They think the skill is to write a clever prompt. But prompting alone is not enough when you want reliable, useful outcomes. What actually matters is the architecture around the prompt. What context is the AI getting? What does it know about the user? What tools can it access? What should it never do? What does success look like? What should happen if it gets confused? So the real craft is not just asking AI for something impressive. The real craft is designing the environment in which the AI can behave intelligently and responsibly.
+
+Slide 8: The 5 Layers of Agentic Design
+Intent, Context, Behavior, Guardrails, Feedback Loop
+
+Talking notes:
+This is a framework you can use for almost any AI-enabled product. First is intent. What is the actual goal? Not the surface-level request, but the real goal. Second is context. What information does the system need in order to act well? Third is behavior. What should the system do step by step? Fourth is guardrails. What should it not do without permission, or what risks should it avoid? Fifth is the feedback loop. How does it learn, adapt, recover, or escalate? If you think through these five layers, you move from making a feature to designing a full behavior system. This is the difference between a shallow AI experience and a genuinely useful one.
+
+Slide 9: Designing Intelligence Means Designing Trust
+
+Talking notes:
+As AI becomes more capable, trust becomes more important. The moment a system can take actions, make recommendations, or operate with some level of autonomy, users start asking deeper questions. Can I rely on this? Will it make mistakes? Does it understand enough before acting? Will it do something unexpected? Trust is not something you add later with a nice UI. It has to be designed into the behavior. That means clear communication, appropriate approval points, good explanations, safe defaults, visible system status, and graceful handling of uncertainty. A powerful system without trust will always feel risky. A well-designed system makes intelligence feel dependable.
+
+Slide 10: Designing for Failure is Now a Core Skill
+
+Talking notes:
+One of the biggest changes in designing AI systems is that failure becomes more complex. Earlier, if a UI failed, maybe the user tapped the wrong thing or a flow broke. In intelligent systems, failure can happen because the system misunderstood the user, assumed something incorrectly, used the wrong tool, or acted with too much confidence. That means designers must now think much more seriously about recovery. What does the system do when it is unsure? How does it ask a better follow-up question? How does it recover without losing trust? How does it prevent a bad action before it happens? In the AI era, good design is not just about success states. It is deeply about failure states.
+
+Slide 11: Real Product Example 1
+Campus Assistant for IIT Students
+
+Talking notes:
+Let us bring this closer to your world. Imagine an agentic campus assistant for IIT Hyderabad. Students deal with a lot of fragmented information every day. Timetables, room changes, club updates, assignment deadlines, events, notices, mess timings, transport questions, and more. A normal chatbot can answer questions if you ask them. But an agentic assistant can go much further. It can know your courses, understand your day, detect conflicts, remind you about deadlines, and surface the next most useful thing. The interesting design question here is not just what the interface looks like. The interesting question is what the assistant should know, what it should prioritize, and how it should communicate without becoming annoying or overwhelming.
+
+Slide 12: Real Product Example 2
+Placement Prep Co-Pilot
+
+Talking notes:
+Now think about placements, something that is very real and stressful for many students. A placement prep assistant could do much more than just answer interview questions. It could analyze a resume, identify weak spots, personalize a prep plan, simulate interviews, score answers, and adapt based on performance. But again, the real design work is deeper than the UI. Should the assistant be encouraging or direct? How should it give critical feedback without demotivating the student? When should it challenge the user and when should it support them? How do you show progress without creating pressure? How do you keep the student in control? So this is a good example of how designing the intelligence layer becomes just as important as designing the screen.
+
+Slide 13: Real Product Example 3
+Hostel Life Support Agent
+
+Talking notes:
+Here is another relatable example. Hostel life is full of small but repeated frictions. Maintenance issues, laundry confusion, food complaints, notices that get missed, repetitive support tasks, room-level issues. A hostel life support agent could help reduce this everyday chaos. It could summarize important notices, log complaints, track requests, remind students, and escalate unresolved issues. But the key challenge is this: how do you make the system feel genuinely helpful, not just like another bureaucratic layer? That is where design matters. The tone, the clarity, the escalation logic, the transparency, and the responsiveness all shape whether this becomes a useful assistant or just another frustrating system.
+
+Slide 14: Prompt vs Context Architecture
+
+Talking notes:
+This slide captures the difference between shallow AI use and mature AI design thinking. If I say, “Create a study assistant for engineering students,” that is a prompt. It may give me something interesting, but it is still very vague. Now compare that with a full context architecture: who the user is, what their goal is, what constraints matter, what the assistant should do, what it should avoid, and when it should escalate. That second version is much more likely to produce something useful, realistic, and trustworthy. So the point is simple: prompting asks for a feature. Context architecture designs a system. That is the shift from using AI casually to building with AI deliberately.
+
+Slide 15: New Questions Every Designer Must Learn to Ask
+
+Talking notes:
+This slide is almost like a checklist for the future designer. These are the new questions that matter. What is the real goal behind the user’s request? What context is required before the system acts? What should the AI remember, and what should it forget? What tools should it be allowed to use? Where does it need confirmation? How should it express uncertainty? What should recovery look like if something goes wrong? If you start asking these questions consistently, your design thinking becomes much more robust. These are the questions that separate surface-level AI features from deeply designed intelligent experiences.
+
+Slide 16: The Designer’s New Toolkit
+
+Talking notes:
+The toolkit of the designer is expanding. It is no longer enough to only know interface patterns or visual systems. Those are still important, but the next generation of designers will also need systems thinking, workflow design, behavior design, context framing, logic mapping, evaluation thinking, and trust design. This does not mean every designer must become a hardcore engineer. But it does mean designers need to become more computational in their thinking. They need to understand how systems behave across time, context, action, and feedback. So the future toolkit is wider, deeper, and far more interdisciplinary.
+
+Slide 17: Human in the Loop vs Human on the Loop
+
+Talking notes:
+This is a very important distinction when designing agentic systems. Human in the loop means the system waits for the human before taking an important action. Human on the loop means the system can act more independently, while the human supervises and intervenes when needed. The right model depends on risk, speed, and consequence. If the system is helping draft a resume, maybe it can do more on its own. If it is making a payment or booking something important, the user should probably approve it first. So the design challenge here is not simply whether AI should help. It is about choosing the right control model for the right scenario.
+
+Slide 18: Mini Case
+Self-Healing UI Components
+
+Talking notes:
+This idea of self-healing UI is useful because it shows how intelligence can improve even something as basic as a component. A traditional component breaks or throws an error. A self-healing component tries to recover intelligently. It understands what went wrong, explains it clearly, suggests the next step, and adapts its behavior. For example, a login system can detect whether the issue is a wrong password, a network problem, or a session timeout, and respond differently in each case. That is much better than a generic error message. So the idea here is that interfaces of the future should not just be clean when things go right. They should be smart when things go wrong.
+
+Slide 19: What IIT Students Should Take From This
+
+Talking notes:
+If there is one thing I want students to take from this session, it is this: you do not have to wait to become experts in AI before you start thinking like agentic designers. You can start right now by looking at products differently. Instead of asking only what the app should look like, ask what the system should understand. Ask what it should do when it is uncertain. Ask what it should remember, when it should act, and how it should recover. These are the thinking patterns that will become more valuable over the next few years. The opportunity is huge for people who start early.
+
+Slide 20: Hands-on Challenge Intro
+Now let’s build one.
+
+Talking notes:
+Up to this point, we have been discussing ideas and frameworks. Now we are going to make it practical. In the next part, you will work in teams and choose a student-centered problem to solve through an agentic workflow. The goal is not to make a perfect product. The goal is to practice thinking like agentic designers. I want you to define the user, the goal, the context, the behavior, the guardrails, and the feedback loop. In short, I want you to design the intelligence layer, not just the interface layer.
+
+Slide 21: Hands-on Canvas
+
+Talking notes:
+This canvas is your working structure. Use it to think clearly and quickly. Start with the problem. Then define the user and their real goal. After that, think about what context the agent would need to act intelligently. Then define what actions it can take, what needs approval, what risks exist, how it should recover, and what the interface should communicate. This is basically the five-layer framework applied in a practical way. Do not overcomplicate it. Just focus on clarity. If your team can make this logic strong, your concept will already be much better than most shallow AI product ideas.
+
+Slide 22: Sample Filled Canvas
+Placement Prep Co-Pilot
+
+Talking notes:
+I’m showing this filled example so you can see what a good answer looks like. Notice that it is not just a feature list. It clearly defines the user, the goal, the context, the actions, the approvals, the risks, the recovery, and the communication style. That is what makes it agentic. It is not saying only “the app should help with placement prep.” It is saying how that help actually works, what it depends on, and where the boundaries are. So as you build your own concepts, try to think at this level. The more concrete your logic is, the stronger your design thinking will be.
+
+Slide 23: Presentation Prompt for Teams
+
+Talking notes:
+When your team presents, keep it very simple. Tell us what problem you chose, what your agent does, what context it needs, one guardrail you added, and one design decision you are proud of. The goal is not to impress with complexity. The goal is to show clarity of thinking. Sometimes a simple idea with strong logic is much more powerful than a flashy idea with weak structure. So focus on making your agent feel real, useful, and responsibly designed.
+
+Slide 24: Final Takeaway
+The future of design is not static. It is agentic.
+
+Talking notes:
+This is where I want to bring the entire talk together. The future of design is not just about interfaces becoming prettier or tools becoming faster. It is about systems becoming more capable, more adaptive, and more autonomous. And that means the role of the designer is becoming bigger, not smaller. Designers now have an opportunity to shape how intelligence shows up in people’s lives. That includes usefulness, trust, control, clarity, and recovery. So if you are entering design, product, or technology today, this is a huge moment. The field is expanding, and the people who learn to architect intent will shape what comes next.
+
+Slide 25: Closing Quote
+
+Talking notes:
+I want to end with this idea: design is no longer only about what a user sees. It is about what a system understands. That is the real shift. And once you start seeing that, your role changes. You are no longer just making interfaces. You are shaping behavior. You are shaping decisions. You are shaping how intelligence becomes useful in the real world. That is why I believe the future belongs to designers who can architect behavior, not just beautify screens. Thank you.

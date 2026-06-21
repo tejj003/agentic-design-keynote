@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presenter Console</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap');
+:root{
+  --b60:#0f62fe;--b40:#78a9ff;--b70:#0043ce;--b20:#a6c8ff;
+  --g100:#161616;--g90:#1c1c1c;--g80:#262626;--g70:#6f6f6f;--g30:#c6c6c6;--g10:#f4f4f4;
+  --green:#42be65;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --cond:'IBM Plex Sans Condensed',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--g100);color:var(--g10);font-family:var(--sans);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid var(--g80);flex-shrink:0}
+.bar .brand{font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--b40)}
+.bar .link{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--g70)}
+.bar .dot{width:8px;height:8px;border-radius:50%;background:var(--g70)}
+.bar .dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+.main{flex:1;display:grid;grid-template-columns:1fr 360px;min-height:0}
+
+/* Left: live preview + current note */
+.now{padding:24px 32px;display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:18px}
+.now .meta{display:flex;align-items:baseline;gap:16px;margin-bottom:0}
+.now .num{font-family:var(--cond);font-size:38px;font-weight:700;color:var(--b40);line-height:1}
+.now .of{font-family:var(--mono);font-size:13px;color:var(--g70)}
+.now .title{font-family:var(--cond);font-size:30px;font-weight:600;color:#fff;line-height:1.1}
+
+/* Live preview */
+.preview{position:relative;width:100%;max-width:1240px;margin:0 auto;align-self:center;flex-shrink:0;background:#000;border:1px solid var(--g80);border-radius:8px;overflow:hidden;aspect-ratio:16/9}
+.preview .plabel{position:absolute;top:8px;left:10px;z-index:5;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--b40);background:rgba(0,0,0,.6);padding:3px 8px;border-radius:3px;pointer-events:none}
+.preview iframe{position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:0 0;border:0;pointer-events:none}
+
+.noteblock{flex:1;display:flex;flex-direction:column;min-height:0}
+.now .nlabel{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--g70);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.now .nlabel::before{content:'';width:26px;height:2px;background:var(--b60)}
+.now .notes{flex:1;overflow-y:auto;font-size:22px;line-height:1.55;color:var(--g20)}
+.now .notes::-webkit-scrollbar{width:8px}
+.now .notes::-webkit-scrollbar-thumb{background:var(--g80);border-radius:4px}
+
+/* Right: timer + next + controls */
+.side{background:var(--g90);border-left:1px solid var(--g80);display:flex;flex-direction:column;min-height:0}
+.timer-box{padding:22px;border-bottom:1px solid var(--g80);text-align:center}
+.timer{font-family:var(--mono);font-size:52px;font-weight:500;letter-spacing:2px;color:#fff;line-height:1}
+.tlabel{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--g70);margin-top:8px}
+.tbtns{display:flex;gap:8px;justify-content:center;margin-top:14px}
+.tbtns button{background:var(--g80);border:1px solid var(--g80);color:var(--g30);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer}
+.tbtns button:hover{border-color:var(--b40);color:#fff}
+
+.next{flex:1;padding:22px;overflow-y:auto;min-height:0}
+.next .nlabel{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--g70);margin-bottom:10px}
+.next .ntitle{font-family:var(--cond);font-size:26px;font-weight:600;color:var(--b40);line-height:1.2;margin-bottom:12px}
+.next .nnotes{font-size:18px;line-height:1.55;color:var(--g30)}
+
+.controls{display:flex;border-top:1px solid var(--g80);flex-shrink:0}
+.controls button{flex:1;background:none;border:none;border-right:1px solid var(--g80);color:var(--g10);font-family:var(--sans);font-size:15px;font-weight:600;padding:20px 0;cursor:pointer}
+.controls button:last-child{border-right:none}
+.controls button:hover{background:var(--g80)}
+.controls button.primary{background:var(--b60)}
+.controls button.primary:hover{background:var(--b70)}
+
+.hint{padding:8px 22px;font-family:var(--mono);font-size:10px;color:var(--g70);border-top:1px solid var(--g80);text-align:center;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="brand">Presenter Console</span>
+  <span class="link"><span class="dot" id="dot"></span><span id="status">Waiting for deck&hellip;</span></span>
+</div>
+
+<div class="main">
+  <div class="now">
+    <div class="meta">
+      <span class="num" id="num">01</span>
+      <span class="of">/ <span id="total">--</span></span>
+      <span class="title" id="title">&mdash;</span>
+    </div>
+    <div class="preview">
+      <span class="plabel">Live Slide</span>
+      <iframe id="frame" src="presentation.html?preview" title="Live slide preview"></iframe>
+    </div>
+    <div class="noteblock">
+      <div class="nlabel">Speaker Notes</div>
+      <div class="notes" id="notes">Keep this window on your laptop and share the deck window. Use the arrow keys or the buttons below to advance.</div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="next">
+      <div class="nlabel">Next Up</div>
+      <div class="ntitle" id="ntitle">&mdash;</div>
+      <div class="nnotes" id="nnotes"></div>
+    </div>
+    <div class="controls">
+      <button id="prev">&#8592; Prev</button>
+      <button id="next" class="primary">Next &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<div class="hint">Arrow keys or buttons control the shared deck &nbsp;&#9632;&nbsp; Share the deck window, keep this one for yourself</div>
+
+<script>
+const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('ibm_deck') : null;
+
+const elNum=document.getElementById('num'), elTotal=document.getElementById('total'),
+      elTitle=document.getElementById('title'), elNotes=document.getElementById('notes'),
+      elNTitle=document.getElementById('ntitle'), elNNotes=document.getElementById('nnotes'),
+      elDot=document.getElementById('dot'), elStatus=document.getElementById('status');
+
+function pad(n){return String(n).padStart(2,'0');}
+
+function render(m){
+  elDot.classList.add('on');
+  elStatus.textContent = 'Connected';
+  elNum.textContent   = pad((m.slide||0)+1);
+  elTotal.textContent = pad(m.total||0);
+  elTitle.textContent = m.title || '\u2014';
+  elNotes.textContent = m.notes || 'No notes for this slide.';
+  elNTitle.textContent= m.nextTitle || '\u2014 End of deck \u2014';
+  elNNotes.textContent= m.nextNotes || '';
+}
+
+if (chan) {
+  chan.onmessage = (e) => { if ((e.data||{}).type === 'state') render(e.data); };
+  chan.postMessage({ type:'request' });
+}
+
+function send(action){ if (chan) chan.postMessage({ type:'nav', action }); }
+document.getElementById('next').onclick = () => send('next');
+document.getElementById('prev').onclick = () => send('prev');
+
+document.addEventListener('keydown', (e) => {
+  switch(e.key){
+    case 'ArrowRight': case 'ArrowDown': case ' ': e.preventDefault(); send('next'); break;
+    case 'ArrowLeft':  case 'ArrowUp':             e.preventDefault(); send('prev'); break;
+  }
+});
+
+/* Scale the live-preview iframe (renders at 1920x1080) to fit its box */
+const frame = document.getElementById('frame');
+function scaleFrame(){
+  const box = frame.parentElement.getBoundingClientRect();
+  const s = box.width / 1920;
+  frame.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', scaleFrame);
+scaleFrame();
+</script>
+</body>
+</html>

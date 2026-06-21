@@ -1,0 +1,674 @@
+Deck Title
+Architecting Intent: The Rise of the Agentic Designers
+From Prompting Outputs to Designing Intelligent Systems
+Opening Tone
+
+This deck should feel futuristic, sharp, and intellectually exciting. The narrative is not “AI can help designers.” The narrative is “design itself is being redefined.”
+
+SLIDE 1
+Title Slide
+
+Architecting Intent: The Rise of the Agentic Designers
+A 90-minute masterclass for IIT Hyderabad
+Designing in the era where products think, act, and adapt
+
+Speaker subtitle options
+Product Design × AI × Systems Thinking
+From interfaces to intelligence
+The future of design is behavioral, contextual, and agentic
+Visual idea
+
+A minimal interface dissolving into a system map of agents, loops, and feedback.
+
+SLIDE 2
+The Big Shift
+
+We are no longer just designing products.
+We are designing systems that can think, decide, act, and evolve.
+
+Supporting copy
+
+For years, designers focused on screens, flows, and usability.
+Now, we are entering a world where the real design challenge is no longer only what users click. It is what the system understands, what it decides, and how it behaves.
+
+Speaker note
+
+This is the mindset reset slide. Pause here. Let this land.
+
+Visual idea
+
+Left side: old design world with wireframes
+Right side: new design world with user, AI, tools, memory, and feedback loop
+
+SLIDE 3
+Why This Matters Now
+
+The boundary between designing and building is collapsing.
+
+Content
+
+In 2026:
+
+AI does not just generate screens
+AI can reason across tasks
+AI can write code, debug, revise, test, and explain
+AI can coordinate across multiple tools
+AI can behave like a collaborator, not just a generator
+Strong line
+
+The designer of tomorrow is not just shaping interfaces.
+They are shaping intelligence.
+
+Example
+
+Earlier:
+“Make me a dashboard screen.”
+
+Now:
+“Analyze the user’s goal, decide what matters, generate the UI, write the component, test the states, and revise based on failure.”
+
+SLIDE 4
+From Generative to Agentic
+Title line
+
+Generative AI gives you outputs. Agentic AI pursues outcomes.
+
+Two-column content
+Generative Era
+Prompt in, result out
+Great for ideation and exploration
+Mostly single-step
+Reactive
+Limited memory
+Weak ownership of task completion
+Agentic Era
+Goal in, system plans execution
+Multi-step reasoning
+Can use tools
+Can remember context
+Can self-correct
+Can collaborate with other agents or systems
+Example
+
+Generative:
+“Create a landing page for a fitness app.”
+
+Agentic:
+“Understand the target user, define the message hierarchy, create a landing page, optimize it for conversion, generate code, test responsiveness, and suggest improvements.”
+
+Visual idea
+
+A simple evolution diagram:
+Prompt → Output
+becomes
+Goal → Plan → Act → Check → Revise
+
+SLIDE 5
+So What Changes for Designers?
+
+Everything important.
+
+Content
+
+The designer’s role expands from:
+
+making interfaces
+to
+designing decisions
+
+From:
+
+crafting screens
+to
+crafting behavior
+
+From:
+
+solving interaction problems
+to
+solving intelligence problems
+Strong phrasing
+
+The future designer is part strategist, part systems thinker, part behavior architect.
+
+Example
+
+Old question:
+“Where should this button go?”
+
+New question:
+“When should the system act on its own, and when should it ask the user first?”
+
+SLIDE 6
+Meet the Agentic Designer
+Definition
+
+An Agentic Designer is someone who designs how intelligent systems behave, collaborate, recover, and earn trust.
+
+What they do
+Define goals clearly
+Architect context
+Set constraints and permissions
+Design workflows across humans and AI
+Anticipate failure
+Decide escalation paths
+Balance automation with control
+Example
+
+A normal designer may design a travel booking UI.
+An agentic designer designs:
+
+what the assistant should ask
+what data it needs
+how it compares options
+how it explains tradeoffs
+when it needs approval before booking
+SLIDE 7
+The Core Shift: Stop Prompting, Start Architecting
+Main line
+
+Prompting is asking for an answer. Architecting is designing the environment in which the answer becomes reliable.
+
+Content
+
+A prompt is just one piece.
+What really matters is:
+
+context
+memory
+tools
+guardrails
+feedback
+success criteria
+Example
+
+Weak prompt:
+“Design a food delivery app for students.”
+
+Stronger architecture:
+
+User: sleep-deprived college student
+Goal: get affordable food fast
+Constraints: budget under ₹150, late-night options, hostel delivery
+Agent behavior: recommend based on time, budget, and rating
+UI tone: direct, fast, low-friction
+Safety: confirm before payment
+SLIDE 8
+The 5 Layers of Agentic Design
+
+This should be one of your strongest framework slides.
+
+1. Intent
+
+What is the actual goal?
+
+2. Context
+
+What does the system need to know?
+
+3. Behavior
+
+What should the system do step by step?
+
+4. Guardrails
+
+What should it never do without permission?
+
+5. Feedback Loop
+
+How does it learn, recover, or improve?
+
+Example: Student Placement Assistant
+
+Intent
+Help a student prepare for placement interviews in 30 days
+
+Context
+Resume, target role, interview date, weak areas, company list
+
+Behavior
+Analyze resume, suggest improvements, create study plan, run mock questions
+
+Guardrails
+Do not fabricate achievements, do not auto-send applications
+
+Feedback Loop
+Adjust prep based on quiz performance and interview readiness
+
+SLIDE 9
+Designing Intelligence Means Designing Trust
+Main statement
+
+The more capable a system becomes, the more carefully trust must be designed.
+
+Questions to ask
+What is the system allowed to do?
+What must always be visible to the user?
+What actions need approval?
+How does the system explain itself?
+What happens if it is wrong?
+Example
+
+A health assistant should not say:
+“You have a serious condition.”
+
+It should say:
+“Based on your symptoms, this may need medical attention. Here are the next best steps.”
+
+Speaker line
+
+Good agentic design is not just powerful. It is responsible.
+
+SLIDE 10
+Designing for Failure is Now a Core Skill
+Content
+
+In traditional design, failure meant broken flows.
+In agentic systems, failure can mean:
+
+wrong assumptions
+overconfident actions
+poor reasoning
+misuse of tools
+hallucinated answers
+loss of user trust
+Designers must define
+fallback states
+clarification patterns
+confidence signals
+escalation paths
+recovery behavior
+Example
+
+Bad behavior:
+AI books a meeting at the wrong time because it assumed availability.
+
+Better behavior:
+“I found two open slots tomorrow. Would you like me to schedule 11:30 AM or 4:00 PM?”
+
+SLIDE 11
+Real Product Example 1: Campus Assistant
+Title
+
+What if IIT Hyderabad had an Agentic Campus Assistant?
+
+Problem
+
+Students struggle with fragmented information:
+
+timetables
+room changes
+club updates
+assignment deadlines
+mess timings
+events
+Agentic solution
+
+A campus assistant that:
+
+knows your courses
+reminds you of deadlines
+suggests shortest route to class
+summarizes club events
+warns about schedule conflicts
+answers campus queries contextually
+Why this is agentic
+
+Because it does not just answer questions.
+It understands a student’s day and acts in context.
+
+Add one scenario
+
+“Your lab got shifted from Block A to Block C, your next class starts in 8 minutes, and a quiz deadline closes tonight. What should the assistant prioritize and how should it communicate?”
+
+This is a great audience engagement moment.
+
+SLIDE 12
+Real Product Example 2: Placement Prep Co-Pilot
+Problem
+
+Students preparing for placements are overwhelmed by:
+
+resume uncertainty
+company expectations
+interview anxiety
+inconsistent preparation
+Agentic workflow
+
+The assistant can:
+
+analyze resume
+spot weak points
+personalize a 2-week preparation plan
+conduct mock interviews
+score answers
+suggest company-specific prep topics
+What the designer designs
+How feedback is phrased
+When the AI should challenge vs support
+How confidence is built
+How progress is visualized
+Where the student stays in control
+Strong one-liner
+
+The interface is not the product anymore.
+The learning loop is.
+
+SLIDE 13
+Real Product Example 3: Hostel Life Support Agent
+Problem
+
+Hostel life is full of micro-frictions:
+
+laundry confusion
+maintenance delays
+food complaints
+lost notices
+repetitive support tasks
+Agentic assistant could:
+log complaints automatically
+track request status
+summarize notices
+remind students about actions
+escalate unresolved issues
+suggest best times for services
+Design challenge
+
+How do you make automation feel helpful, not bureaucratic?
+
+SLIDE 14
+Prompt vs Context Architecture
+
+This should be a powerful comparison slide.
+
+Title
+
+Same problem. Two very different design mindsets.
+
+Example Problem
+
+Build an AI study assistant for engineering students
+
+Version 1: Prompt mindset
+
+“Create a study assistant for students.”
+
+Version 2: Architecture mindset
+Users: 2nd and 3rd year engineering students
+Goal: prepare for exams with less stress
+Inputs: syllabus, calendar, current performance, available study hours
+Behaviors: prioritize topics, schedule revision, detect backlog risk
+Tone: encouraging, clear, non-judgmental
+Guardrails: do not overload, do not create impossible study plans
+Escalation: if student repeatedly misses tasks, recommend faculty or peer support
+Closing line
+
+One asks for a feature.
+The other designs a system.
+
+SLIDE 15
+New Questions Every Designer Must Learn to Ask
+
+This can be a clean question-led slide.
+
+Questions
+What is the real user goal behind the request?
+What context does the AI need before acting?
+What should the system remember?
+What should it forget?
+What tools should it access?
+What needs human confirmation?
+How should it explain uncertainty?
+What does safe failure look like?
+How does the user regain control?
+Speaker note
+
+This is the new design interview. This is the new product critique.
+
+SLIDE 16
+The Designer’s New Toolkit
+Content
+
+Tomorrow’s designer will need fluency in:
+
+systems thinking
+workflow design
+AI behavior design
+prompt structuring
+context framing
+logic mapping
+evaluation loops
+trust and safety thinking
+prototyping with AI tools
+Add a sharp line
+
+Figma alone will not define the next generation of designers.
+The winners will be those who can think across behavior, systems, and intelligence.
+
+SLIDE 17
+Human in the Loop vs Human on the Loop
+Explain simply
+
+Human in the loop
+The human approves each important action
+
+Human on the loop
+The system acts, and the human supervises or intervenes when needed
+
+Why it matters
+
+Designers must choose the right control model depending on:
+
+risk
+speed
+user confidence
+consequence of failure
+Example
+
+Resume assistant: human on the loop
+Payment assistant: human in the loop
+Medical assistant: stronger human oversight
+
+SLIDE 18
+Mini Case: Self-Healing UI Components
+
+Since your brief mentions self-healing UI, include it simply.
+
+Title
+
+What is a self-healing UI component?
+
+Definition
+
+A UI component that can detect issues, adapt to context, and recover gracefully without breaking the experience.
+
+Example
+
+A smart form field that:
+
+notices invalid input
+explains the issue clearly
+auto-suggests correction
+adapts keyboard/input mode
+retries gracefully after failure
+Better example
+
+A login module that:
+
+identifies whether failure is due to password, network, or session timeout
+changes its response accordingly
+offers the next best step instead of a generic error
+Strong line
+
+The best interface is not the one that never fails.
+It is the one that fails intelligently.
+
+SLIDE 19
+What IIT Students Should Take From This
+Content
+
+You do not need to wait to become “an AI expert” to start.
+You need to start seeing products differently.
+
+Three mindset shifts
+Do not just ask what the app should look like
+Ask what the system should understand
+Ask how the system should behave under pressure
+Strong line
+
+The next generation of builders will not separate design, product, and intelligence. They will think in loops.
+
+SLIDE 20
+Hands-on Challenge Intro
+Title
+
+Now let’s build one.
+
+Challenge
+
+In teams, design an agentic workflow for a student problem.
+
+Suggested options
+Campus assistant
+Placement prep co-pilot
+Health and habit coach
+Hostel support agent
+Academic planner
+Club and event navigator
+Deliverable
+
+Each team will define:
+
+user
+goal
+context
+behavior
+guardrails
+feedback loop
+SLIDE 21
+Hands-on Canvas
+
+You can make this a worksheet slide.
+
+Agentic Design Canvas
+Problem space
+Who is the user?
+What is the goal?
+What context is needed?
+What actions can the agent take?
+What should require approval?
+What are the failure risks?
+How should it recover?
+What should the interface communicate?
+Tip line
+
+Design the intelligence, not just the interface.
+
+SLIDE 22
+Sample Filled Canvas
+
+Use one full example so students understand what “good” looks like.
+
+Example: Placement Prep Co-Pilot
+
+User
+Final-year IIT student preparing for software roles
+
+Goal
+Improve interview readiness in 21 days
+
+Context
+Resume, target companies, available time, past performance, confidence level
+
+Actions
+Generate daily prep plan, run mock interviews, revise based on weak areas
+
+Approvals needed
+Before sending any application or external message
+
+Risks
+False confidence, generic feedback, overload, irrelevant interview questions
+
+Recovery
+Ask clarifying questions, simplify the plan, show confidence level, suggest human mentor help
+
+UI communication
+Clear progress, transparent reasoning, motivating tone
+
+SLIDE 23
+Presentation Prompt for Teams
+Ask each team to answer in 60 seconds
+What problem did you choose?
+What does your agent do?
+What context does it need?
+One guardrail you added
+One design decision you are proud of
+SLIDE 24
+Final Takeaway
+Main line
+
+The future of design is not static. It is agentic.
+
+Supporting copy
+
+The products of tomorrow will not just wait for commands.
+They will understand goals, operate across systems, recover from failure, and collaborate with humans.
+
+And that means the role of the designer is becoming more important, not less.
+
+Strong ending
+
+The next great designers will not just make things usable.
+They will make intelligence useful, trustworthy, and human.
+
+SLIDE 25
+Closing Quote
+
+You can end with one of these:
+
+Option 1
+
+“Design is no longer only about what a user sees. It is about what a system understands.”
+
+Option 2
+
+“In the Agentic Era, the real design material is not pixels. It is intent.”
+
+Option 3
+
+“The future belongs to designers who can architect behavior, not just beautify interfaces.”
+
+Bonus: Storytelling Flow for Delivery
+
+Use this presentation rhythm:
+
+Act 1: Wake them up
+The world changed
+Design changed
+Their role is bigger now
+Act 2: Give them a framework
+Generative vs agentic
+5 layers of agentic design
+Trust, failure, context
+Act 3: Make it real
+Campus assistant
+Placement prep
+Hostel support
+Self-healing UI
+Act 4: Make them build
+Canvas
+Team exercise
+Quick share-outs
+Act 5: End with identity
+They are not just students
+They are the next generation of designers, builders, and system thinkers
+Bonus: Visual Style Direction for the Deck
+
+To make it premium:
+
+Dark background with minimal glowing accent colors
+Use diagrams, loops, and system maps instead of too much text
+Keep each slide to one big idea
+Use bold lines and strong contrast
+Use futuristic but clean type hierarchy
+Avoid cluttered AI imagery; make it feel intelligent, not gimmicky

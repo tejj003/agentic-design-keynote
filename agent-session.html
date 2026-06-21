@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Session — Architecting Intent</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d0d0d;--s1:#141414;--s2:#1a1a1a;--s3:#222;--b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.12);--t:#e8e8e8;--t2:#999;--t3:#555;--c:#00FFE0;--o:#FF8C42;--g:#28c840;--r:#ff5f57;--y:#ffbd2e;--cream:#F5F0EB;--m:'JetBrains Mono',monospace;--s:'DM Sans',sans-serif;--d:'Oswald',sans-serif;--e:cubic-bezier(.215,.61,.355,1)}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t);font-family:var(--s)}
+
+/* ══ SCENES ══ */
+.scene{position:fixed;inset:0;bottom:40px;display:flex;flex-direction:column;opacity:0;pointer-events:none;z-index:1;transition:none}
+.scene.active{opacity:1;pointer-events:auto;transform:none}
+/* Exit animations */
+.scene.exit-slide{animation:exitSlide .25s var(--e) forwards}
+.scene.exit-terminal{animation:exitTerminal .15s ease forwards}
+.scene.exit-chat,.scene.exit-browser,.scene.exit-figma{animation:exitMinimize .3s var(--e) forwards}
+.scene.exit-error{animation:exitGlitch .3s ease forwards}
+/* Entrance animations */
+.scene.enter-slide{animation:enterSlide .4s var(--e) forwards}
+.scene.enter-terminal{animation:enterTerminal .3s var(--e) forwards}
+.scene.enter-chat{animation:enterChat .35s var(--e) forwards}
+.scene.enter-browser{animation:enterBrowser .35s var(--e) forwards}
+.scene.enter-figma{animation:enterFigma .35s var(--e) forwards}
+.scene.enter-error{animation:enterError .4s ease forwards}
+
+@keyframes exitSlide{to{opacity:0;transform:scale(.95)}}
+@keyframes exitTerminal{to{opacity:0}}
+@keyframes exitMinimize{to{opacity:0;transform:translateY(40px) scale(.96)}}
+@keyframes exitGlitch{0%{opacity:1}30%{opacity:1;transform:translateX(4px)}60%{opacity:1;transform:translateX(-4px)}100%{opacity:0}}
+@keyframes enterSlide{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@keyframes enterTerminal{from{opacity:0}to{opacity:1}}
+@keyframes enterChat{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes enterBrowser{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes enterFigma{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+@keyframes enterError{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:scale(1)}}
+
+/* Content stagger (children hidden until entrance) */
+.scene .stagger{opacity:0;transform:translateY(8px);transition:opacity .3s var(--e),transform .3s var(--e)}
+.scene.played .stagger{opacity:1;transform:translateY(0)}
+
+/* ══ COMMAND STRIP (transition overlay) ══ */
+#cmdStrip{
+  position:fixed;top:0;left:0;right:0;height:32px;
+  background:#0a0a0a;border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 16px;gap:8px;
+  font-family:var(--m);font-size:11px;z-index:60;
+  transform:translateY(-100%);transition:transform .15s var(--e);
+}
+#cmdStrip.show{transform:translateY(0)}
+#cmdStrip .cmd-icon{width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,var(--c),#0a8);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#000;flex-shrink:0}
+#cmdStrip .cmd-text{color:var(--c);white-space:nowrap;overflow:hidden}
+#cmdStrip.error-mode{background:#1a0505;border-color:rgba(255,95,87,.15)}
+#cmdStrip.error-mode .cmd-text{color:var(--r)}
+#cmdStrip .cmd-cursor{display:inline-block;width:7px;height:13px;background:var(--c);animation:blink 1s step-end infinite;vertical-align:text-bottom;margin-left:1px}
+
+/* ══ AGENT BAR (per scene, top) ══ */
+.agent-bar{height:32px;background:#0a0a0a;border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 16px;gap:8px;font-family:var(--m);font-size:11px;color:var(--t3);flex-shrink:0}
+.agent-bar .abi{width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,var(--c),#0a8);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#000;flex-shrink:0}
+.agent-bar .abt{white-space:nowrap;overflow:hidden}
+.ab-done{color:var(--g)}.ab-typing{color:var(--c)}
+.agent-bar .abs{margin-left:auto;display:flex;align-items:center;gap:5px}
+.ab-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ══ APP CONTENT ══ */
+.app-c{flex:1;overflow:hidden;position:relative}
+
+/* ══ TASKBAR ══ */
+.taskbar{position:fixed;bottom:0;left:0;right:0;height:40px;background:var(--s2);border-top:1px solid var(--b1);display:flex;align-items:center;padding:0 12px;z-index:100}
+.tb-apps{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
+.tb-a{position:relative;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:500;color:var(--t3);font-family:var(--s);display:flex;align-items:center;gap:4px;transition:all .15s}
+.tb-a.active{color:var(--c)}
+.tb-a .tb-line{position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--c);border-radius:1px;transition:width .2s var(--e)}
+.tb-a.active .tb-line{width:16px}
+.tb-a.bounce{animation:tbBounce .4s var(--e)}
+@keyframes tbBounce{0%{transform:translateY(0)}30%{transform:translateY(-5px)}60%{transform:translateY(-2px)}100%{transform:translateY(0)}}
+.tb-ico{font-size:12px}
+.tb-time{font-family:var(--m);font-size:10px;color:var(--t3);margin-left:auto;padding-right:8px}
+
+/* ══ TERMINAL ══ */
+.term-f{background:#0a0a0a;font-family:var(--m);font-size:13px;line-height:1.85;padding:20px 28px;overflow-y:auto;height:100%}
+.tl{margin-bottom:1px}.tp{color:var(--g)}.tp::before{content:'$ ';color:var(--t3)}.tu{color:var(--c)}.tu::before{content:'❯ ';color:var(--c)}
+.td{color:var(--t3)}.tc{color:var(--c)}.to{color:var(--o)}.tg{color:var(--g)}.tr{color:var(--r)}.tb{font-weight:700}
+.cursor{display:inline-block;width:8px;height:14px;background:var(--c);animation:blink 1s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+.tblock{background:rgba(0,255,224,.03);border-left:2px solid rgba(0,255,224,.15);padding:6px 14px;margin:6px 0;font-size:12px;color:var(--t2)}
+.tprog{background:#1a1a1a;height:5px;border-radius:3px;width:260px;margin:4px 0;overflow:hidden}
+.tprog-fill{height:100%;background:linear-gradient(90deg,var(--c),var(--g));width:0%;border-radius:3px}
+.tgap{height:8px}
+
+/* ══ SLIDE ══ */
+.pslide{height:100%;overflow:hidden;position:relative;display:flex;flex-direction:column;padding:44px 60px}
+.pslide.cream{background:var(--cream);color:#1a1a1a}.pslide.cyan{background:var(--c);color:#0a2e28}.pslide.orange{background:var(--o);color:#1a1008}.pslide.dark{background:#1a1a1a;color:var(--cream)}
+.pslide .p-date{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;opacity:.5;margin-bottom:18px}
+.pslide h1{font-family:var(--d);font-weight:700;font-size:clamp(38px,5vw,78px);line-height:1.06;letter-spacing:-1px;margin-bottom:18px;max-width:58%}
+.pslide h2{font-family:var(--d);font-weight:700;font-size:clamp(26px,3.5vw,56px);line-height:1.1;margin-bottom:16px}
+.pslide .p-sub{font-size:clamp(14px,1.2vw,19px);line-height:1.65;max-width:500px;opacity:.6}
+.p-strong{font-family:var(--d);font-size:clamp(15px,1.6vw,24px);font-weight:600;line-height:1.3;margin-top:22px;max-width:560px}
+.pxw{position:absolute;pointer-events:none;right:0;top:0;bottom:0;width:28%;z-index:0}
+.pxb{position:absolute;width:10vw;height:10vw}
+.pslide.cream .pxb{background:var(--c)}.pslide.orange .pxb{background:var(--cream)}.pslide.cyan .pxb{background:var(--cream)}.pslide.dark .pxb{background:var(--c);opacity:.12}
+.pxb:nth-child(1){top:0;right:0}.pxb:nth-child(2){top:0;right:11vw}.pxb:nth-child(3){top:11vw;right:5.5vw}.pxb:nth-child(4){top:22vw;right:0}.pxb:nth-child(5){top:22vw;right:11vw}.pxb:nth-child(6){bottom:0;right:0}
+.p-ct{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center;max-width:58%}
+.p-ct.wide{max-width:100%}
+.p-bullets{list-style:none;margin:10px 0}.p-bullets li{padding:3px 0 3px 16px;position:relative;font-size:clamp(12px,1vw,15px);line-height:1.6}.p-bullets li::before{content:'';position:absolute;left:0;top:10px;width:5px;height:5px;border-radius:50%;background:var(--c)}.pslide.cyan .p-bullets li::before{background:#0a2e28}.pslide.orange .p-bullets li::before{background:var(--cream)}
+.p-ex{background:rgba(0,0,0,.04);padding:14px 18px;border-left:3px solid var(--c);margin:12px 0;font-size:clamp(11px,.85vw,13px);line-height:1.65;max-width:460px}.p-ex strong{font-weight:600}.pslide.dark .p-ex{background:rgba(255,255,255,.04)}
+.p-comp{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:12px 0;max-width:660px}
+.p-comp .cth{font-family:var(--d);font-size:clamp(13px,1.1vw,17px);font-weight:700;padding:9px 16px;border-bottom:2px solid}.p-comp .cth:nth-child(2){background:var(--c)}
+.p-comp .ctd{padding:5px 16px;font-size:clamp(11px,.8vw,13px);border-bottom:1px solid rgba(0,0,0,.05)}
+.p-flow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:14px 0}.pfs{background:var(--c);padding:5px 12px;font-family:var(--d);font-weight:600;font-size:11px;text-transform:uppercase}.pfs.dim{background:rgba(0,0,0,.06);color:#666}.pfa{font-size:13px;opacity:.3}
+.p-shift{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:clamp(13px,1.1vw,16px)}.ps-old{opacity:.35;text-decoration:line-through}.ps-arr{color:var(--c);font-weight:700}.ps-new{font-weight:600}.pslide.orange .ps-arr{color:var(--cream)}
+.p-layer{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}.p-ln{font-family:var(--d);font-weight:700;font-size:22px;color:var(--c);min-width:30px;text-align:right}.p-lh{font-family:var(--d);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.5px}.p-ld{font-size:11px;opacity:.5;margin-top:1px}
+.p-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;max-width:480px}.p-tag{padding:5px 12px;background:rgba(0,0,0,.04);font-size:11px;font-weight:500;border-left:3px solid var(--c)}
+.p-canvas{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0;max-width:600px}.p-cc{background:rgba(0,0,0,.03);padding:10px 12px;border-left:2px solid var(--c)}.pslide.dark .p-cc{background:rgba(255,255,255,.03)}.p-ccl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:.4;margin-bottom:2px}.p-ccv{font-size:11px;line-height:1.5}
+.p-sn{position:absolute;bottom:22px;right:60px;font-size:11px;opacity:.3}
+.p-cap{position:absolute;bottom:22px;left:60px;font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;opacity:.3}
+
+/* ══ BROWSER ══ */
+.browser-f{height:100%;display:flex;flex-direction:column;background:var(--s2)}
+.bbar{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--s1);border-bottom:1px solid var(--b1)}
+.bdots{display:flex;gap:5px;margin-right:8px}.bdot{width:10px;height:10px;border-radius:50%}
+.burl{flex:1;background:var(--s3);border-radius:6px;padding:5px 12px;font-family:var(--m);font-size:11px;color:var(--t2);display:flex;align-items:center;gap:6px;overflow:hidden}
+.burl .lock{color:var(--g);font-size:9px}.burl-text{white-space:nowrap;overflow:hidden}
+.bcontent{flex:1;background:var(--cream);overflow-y:auto;position:relative}
+/* Browser skeleton loader */
+.skel{background:linear-gradient(90deg,#e8e4df 25%,#f0ece7 50%,#e8e4df 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.bc-card{background:#fff;border-radius:12px;padding:18px 22px;box-shadow:0 1px 6px rgba(0,0,0,.04);margin-bottom:12px;border:1px solid rgba(0,0,0,.05);opacity:0;transform:translateY(8px);transition:opacity .35s var(--e),transform .35s var(--e)}
+.bc-card.show{opacity:1;transform:translateY(0)}
+
+/* ══ FIGMA ══ */
+.figma-f{height:100%;display:flex;flex-direction:column}
+.fbar{display:flex;align-items:center;height:34px;background:#2c2c2c;border-bottom:1px solid var(--b1);flex-shrink:0}
+.fb{padding:0 14px;font-size:10px;color:var(--t2);height:100%;display:flex;align-items:center;gap:4px;border-right:1px solid var(--b1)}.fb.act{background:#383838;color:var(--t)}
+.fcanvas{flex:1;background:#1e1e1e;display:flex;position:relative;overflow:hidden}
+.fcanvas-a{flex:1;display:flex;align-items:center;justify-content:center}
+.fsb{width:200px;background:#2c2c2c;border-left:1px solid var(--b1);padding:12px;font-size:10px;color:var(--t2);overflow-y:auto;flex-shrink:0;opacity:0;transition:opacity .4s var(--e)}.fsb.show{opacity:1}
+.fst{font-weight:600;color:var(--t);margin-bottom:5px;font-size:9px;text-transform:uppercase;letter-spacing:1px}
+.fsr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)}.fsr span:last-child{color:var(--t3);font-family:var(--m);font-size:9px}
+.fframe{width:360px;height:240px;background:var(--cream);border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.4);position:relative;padding:14px 18px;overflow:hidden;opacity:0;transform:scale(.95);transition:opacity .4s var(--e),transform .4s var(--e)}
+.fframe.show{opacity:1;transform:scale(1)}
+.fframe-l{position:absolute;top:-18px;left:0;font-size:9px;color:var(--t3);font-family:var(--m)}
+.fsel{position:absolute;inset:-2px;border:2px solid #0d99ff;pointer-events:none;opacity:0;transition:opacity .3s}.fsel.show{opacity:1}
+.fh{position:absolute;width:6px;height:6px;background:#fff;border:1.5px solid #0d99ff}.fh.tl{top:-3px;left:-3px}.fh.tr{top:-3px;right:-3px}.fh.bl{bottom:-3px;left:-3px}.fh.br{bottom:-3px;right:-3px}
+
+/* ══ CHAT ══ */
+.chat-f{height:100%;display:flex;flex-direction:column;background:var(--s1)}
+.ch-h{padding:10px 18px;border-bottom:1px solid var(--b1);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ch-dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
+.ch-body{flex:1;padding:18px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.cmsg{max-width:68%;padding:10px 14px;border-radius:11px;font-size:13px;line-height:1.6;opacity:0;transform:translateY(6px);transition:opacity .3s var(--e),transform .3s var(--e)}
+.cmsg.show{opacity:1;transform:translateY(0)}
+.cmsg.usr{background:var(--c);color:#000;align-self:flex-end;border-bottom-right-radius:3px}
+.cmsg.bot{background:var(--s2);color:var(--t);align-self:flex-start;border-bottom-left-radius:3px;border:1px solid var(--b1)}
+.cmsg .bt{font-size:9px;color:var(--c);font-weight:600;margin-bottom:3px;display:block}
+.ch-typing{align-self:flex-start;padding:8px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:11px;border-bottom-left-radius:3px;display:none}
+.ch-typing.show{display:flex}
+.ch-typing span{width:6px;height:6px;background:var(--t3);border-radius:50%;animation:typDot 1.2s infinite}
+.ch-typing span:nth-child(2){animation-delay:.2s}.ch-typing span:nth-child(3){animation-delay:.4s}
+@keyframes typDot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+.ch-input{display:flex;gap:7px;padding:10px 18px;border-top:1px solid var(--b1);background:var(--s2)}
+.ch-input input{flex:1;background:var(--s3);border:1px solid var(--b1);color:var(--t);padding:7px 12px;border-radius:7px;font-size:12px;font-family:var(--s)}
+.ch-input button{background:var(--c);border:none;color:#000;padding:7px 14px;border-radius:7px;font-weight:600;font-size:12px;cursor:pointer}
+
+/* ══ ERROR ══ */
+.error-f{height:100%;display:flex;align-items:center;justify-content:center;background:#0a0a0a;position:relative}
+.glitch{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0}
+.glitch.show{opacity:1;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,0,0,.04) 2px,rgba(255,0,0,.04) 4px);animation:gf .12s infinite}
+@keyframes gf{0%{opacity:1}50%{opacity:0}100%{opacity:1}}
+.err-flash{position:absolute;inset:0;background:rgba(255,0,0,.1);opacity:0;pointer-events:none;z-index:4}
+.err-box{background:var(--s1);border:1px solid rgba(255,95,87,.15);border-radius:12px;padding:28px 40px;max-width:480px;text-align:center;z-index:10;opacity:0;transform:scale(1.08);transition:opacity .3s,transform .3s}
+.err-box.show{opacity:1;transform:scale(1)}
+.err-ico{font-size:40px;margin-bottom:8px;opacity:.6}.err-title{font-family:var(--m);font-size:14px;color:var(--r);font-weight:700;margin-bottom:6px}
+.err-msg{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px}
+.err-stack{font-family:var(--m);font-size:10px;color:var(--t3);text-align:left;background:var(--s2);padding:10px 12px;border-radius:6px;line-height:1.8;margin-bottom:12px}
+.err-note{font-size:12px;color:var(--t2)}
+
+/* ══ PROGRESS ══ */
+.progress{position:fixed;top:0;left:0;height:2px;background:var(--c);transition:width .4s var(--e);z-index:200}
+
+/* ══ NOTES ══ */
+.notes{position:fixed;right:0;top:0;bottom:40px;width:260px;background:var(--s1);border-left:1px solid var(--b1);transform:translateX(100%);transition:transform .2s var(--e);z-index:150}
+.notes.open{transform:translateX(0)}
+.notes-h{padding:10px 12px;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center}
+.notes-h h4{font-family:var(--m);font-size:9px;color:var(--c);text-transform:uppercase;letter-spacing:2px}
+.notes-x{background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px}
+.notes-b{padding:10px 12px}.notes-bi{font-size:11px;line-height:1.6;color:var(--t2);margin-bottom:8px}
+.notes-b textarea{width:100%;min-height:50px;background:var(--s2);border:1px solid var(--b1);color:var(--t);padding:7px 10px;font-size:11px;line-height:1.5;resize:vertical;border-radius:4px;font-family:var(--s)}
+.notes-b textarea::placeholder{color:var(--t3)}.notes-b textarea:focus{outline:none;border-color:rgba(0,255,224,.2)}
+.notes-lbl{font-family:var(--m);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;display:block}
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<!-- COMMAND STRIP (transition overlay) -->
+<div id="cmdStrip"><div class="cmd-icon">C</div><span class="cmd-text" id="cmdText"></span></div>
+
+<!-- ══════ SCENES ══════ -->
+<div id="deck">
+
+<!-- 0: TERMINAL BOOT -->
+<div class="scene active" data-notes="Opening: Good morning everyone. I am really excited to be here at IIT Hyderabad. Today is about a massive shift in design, technology, and product thinking. For a long time, design meant shaping interfaces. But now, with AI systems that can reason, act, code, revise, and collaborate, the role of the designer is expanding fast. This session is about moving from prompting AI to architecting intent." data-app="Terminal" data-entrance="boot" data-cmd="">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing" id="ab0">Initializing...</span><div class="abs"><div class="ab-dot"></div><span style="font-size:9px;color:var(--t3)">Active</span></div></div>
+  <div class="app-c"><div class="term-f" id="t0"></div></div>
+</div>
+
+<!-- 1: SLIDE Title -->
+<div class="scene" data-notes="SLIDE 1: Good morning everyone. Today is about a massive shift in design. For a long time, design meant shaping interfaces. But now, with AI that can reason, act, code, and collaborate, the designer role is expanding. This session is about moving from prompting AI to architecting intent — how designers are becoming people who shape behavior, intelligence, trust, and outcomes." data-app="Presentation" data-entrance="slide" data-cmd="claude --render slide 1 --theme pixel-grid">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Rendering slide 1</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cream"><div class="pxw"><div class="pxb"></div><div class="pxb"></div><div class="pxb"></div><div class="pxb"></div><div class="pxb"></div><div class="pxb"></div></div><div class="p-ct"><p class="p-date stagger">IIT Hyderabad · 2026</p><h1 class="stagger">Architecting Intent: The Rise of the Agentic Designers</h1><p class="p-sub stagger">Designing in the era where products think, act, and adapt.</p><div class="stagger" style="display:flex;gap:12px;margin-top:18px;flex-wrap:wrap"><span class="p-tag" style="border-color:var(--c)">Product Design × AI</span><span class="p-tag" style="border-color:var(--o)">Systems Thinking</span></div></div><div class="p-cap">Masterclass</div><div class="p-sn">1 / 25</div></div></div>
+</div>
+
+<!-- 2: SLIDE Big Shift -->
+<div class="scene" data-notes="SLIDE 2 — THE BIG SHIFT: This is the central idea. Earlier, products were mostly passive — user clicked, product responded. Now systems interpret goals, take action, make decisions, improve over time. The design challenge is no longer just about the screen. It is about what the system understands behind that screen. Earlier we designed interaction. Now we are designing behavior. Earlier we designed screens. Now we design systems that can act." data-app="Presentation" data-entrance="slide" data-cmd="claude --advance slide 2">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Advancing to slide 2</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cyan"><div class="p-ct" style="max-width:70%"><p class="p-date stagger">The Big Shift</p><h1 class="stagger" style="max-width:90%">We are no longer just designing products.</h1><p class="p-sub stagger" style="opacity:.7">We are designing systems that can <strong>think, decide, act, and evolve.</strong></p></div><div class="p-cap">Caption</div><div class="p-sn">2 / 25</div></div></div>
+</div>
+
+<!-- 3: CHAT -->
+<div class="scene" data-notes="SLIDES 3-5 CHAT: Why this matters now — the separation between roles is weakening. Designers can go from idea to prototype to code much faster. AI participates in each step. The role is changing. | Generative vs Agentic — In the generative phase, AI mostly reacts. In the agentic phase, AI reasons through steps, makes plans, uses tools, checks results, corrects itself. Quality depends on context, constraints, and logic you design around the system. | What changes — The designer must ask bigger questions: When should the system act? When pause? What info before recommending? How to communicate uncertainty? These are system behavior questions. The future designer is a behavior architect, systems thinker, shaper of trust." data-app="Chat" data-entrance="chat" data-cmd="open --app chat --mode conversational">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing">Chat mode — explaining key concepts</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="chat-f"><div class="ch-h"><div class="ch-dot"></div>Claude — opus-4 · agentic</div><div class="ch-body" id="chatBody3"><div class="cmsg usr">What's the difference between generative and agentic AI?</div><div class="cmsg bot"><span class="bt">Claude</span>Generative AI gives you <strong>outputs</strong>. Agentic AI pursues <strong>outcomes.</strong> It plans, uses tools, self-corrects, and collaborates.</div><div class="cmsg usr">What changes for designers?</div><div class="cmsg bot"><span class="bt">Claude</span>Three shifts:<br>Interfaces → <strong>Decisions</strong><br>Screens → <strong>Behavior</strong><br>Interaction → <strong>Intelligence</strong><br><br>The future designer is part strategist, part behavior architect.</div><div class="ch-typing" id="typing3"><span></span><span></span><span></span></div></div><div class="ch-input"><input placeholder="Ask about agentic design..." readonly><button>Send</button></div></div></div>
+</div>
+
+<!-- 4: SLIDE Comparison -->
+<div class="scene" data-notes="SLIDE 4 — GENERATIVE TO AGENTIC: We all know generative AI — prompt in, result out. But agentic AI reasons through multiple steps. It understands a goal, makes a plan, uses tools, checks results, corrects itself. Instead of asking for one output, you set up a system that works toward an outcome. The quality depends much more on the context, constraints, and logic you design around the system." data-app="Presentation" data-entrance="slide" data-cmd="claude --render slide 4 --layout comparison">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Rendering comparison view</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cream"><div class="p-ct wide"><p class="p-date stagger">The Evolution</p><h2 class="stagger">From Generative to Agentic</h2><div class="p-comp stagger"><div class="cth">Generative</div><div class="cth">Agentic</div><div class="ctd">Prompt → result</div><div class="ctd">Goal → system plans</div><div class="ctd">Single-step</div><div class="ctd">Multi-step reasoning</div><div class="ctd">Reactive</div><div class="ctd">Self-corrects</div><div class="ctd">No memory</div><div class="ctd">Context-aware</div></div><div class="p-flow stagger"><span class="pfs dim">Prompt</span><span class="pfa">→</span><span class="pfs dim">Output</span><span style="margin:0 6px;font-size:10px;opacity:.3">becomes</span><span class="pfs">Goal</span><span class="pfa">→</span><span class="pfs">Plan</span><span class="pfa">→</span><span class="pfs">Act</span><span class="pfa">→</span><span class="pfs">Check</span><span class="pfa">→</span><span class="pfs">Revise</span></div></div><div class="p-cap">Caption</div><div class="p-sn">4 / 25</div></div></div>
+</div>
+
+<!-- 5: SLIDE Shifts (Orange) -->
+<div class="scene" data-notes="SLIDE 5 — WHAT CHANGES: The designer is no longer just deciding where the button goes. Now they must ask bigger questions. When should the system act automatically? When should it pause? What information should it use before making a recommendation? How should it communicate uncertainty? These are system behavior questions. The designer of the future is also a behavior architect, a systems thinker, and a shaper of trust." data-app="Presentation" data-entrance="slide" data-cmd="claude --render slide 5 --theme orange">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Rendering role evolution</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide orange"><div class="p-ct"><p class="p-date stagger">The Designer's Role</p><h2 class="stagger">So What Changes?</h2><div class="stagger"><div class="p-shift"><span class="ps-old">Making interfaces</span><span class="ps-arr">→</span><span class="ps-new">Designing decisions</span></div><div class="p-shift"><span class="ps-old">Crafting screens</span><span class="ps-arr">→</span><span class="ps-new">Crafting behavior</span></div><div class="p-shift"><span class="ps-old">Interaction problems</span><span class="ps-arr">→</span><span class="ps-new">Intelligence problems</span></div></div><p class="p-strong stagger">Part strategist, part systems thinker, part behavior architect.</p></div><div class="p-cap">Caption</div><div class="p-sn">5 / 25</div></div></div>
+</div>
+
+<!-- 6: TERMINAL Architect -->
+<div class="scene" data-notes="SLIDES 6-7 TERMINAL: Agentic Designer — remember this term. They define the goal, context, behavior, boundaries, fallback paths. They think about how humans and AI collaborate, when AI should act, wait, or escalate. | Core Shift: Stop Prompting, Start Architecting — prompting alone is not enough. What matters is the architecture: context, tools, constraints, success criteria, failure handling. The real craft is designing the environment in which AI behaves intelligently and responsibly." data-app="Terminal" data-entrance="terminal" data-cmd="claude --mode architect --framework layers">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing">Architect mode — building framework</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="term-f" id="t6"><div class="tl stagger"><span class="tp">claude --mode architect</span></div><div class="tl stagger"><span class="td">Entering architecture mode...</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="tu">Build the 5 layers of agentic design</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="to tb">⟳ Reasoning</span><span class="td"> — analyzing patterns... done (1.8s)</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="tc tb">01: INTENT</span> <span class="td">— What is the goal?</span></div><div class="tl stagger"><span class="tc tb">02: CONTEXT</span> <span class="td">— What does it need to know?</span></div><div class="tl stagger"><span class="tc tb">03: BEHAVIOR</span> <span class="td">— Step by step?</span></div><div class="tl stagger"><span class="to tb">04: GUARDRAILS</span> <span class="td">— What should it never do?</span></div><div class="tl stagger"><span class="tc tb">05: FEEDBACK</span> <span class="td">— How does it learn?</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">Framework generated. Rendering slide...</span></div></div></div>
+</div>
+
+<!-- 7: SLIDE 5 Layers -->
+<div class="scene" data-notes="SLIDE 8 — 5 LAYERS: This framework works for almost any AI product. 1) Intent: the real goal, not the surface request. 2) Context: what info does the system need to act well? 3) Behavior: step by step actions. 4) Guardrails: what should it NOT do without permission? 5) Feedback Loop: how does it learn, adapt, recover, escalate? If you think through these five layers, you move from making a feature to designing a full behavior system." data-app="Presentation" data-entrance="slide" data-cmd="claude --render slide 7 --layout framework">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Rendered framework</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cream"><div style="display:flex;gap:36px;flex:1;align-items:flex-start;padding-top:8px;position:relative;z-index:2"><div style="flex:1"><p class="p-date stagger">Framework</p><h2 class="stagger">The 5 Layers</h2><div class="stagger"><div class="p-layer"><div class="p-ln">01</div><div><div class="p-lh">Intent</div><div class="p-ld">What is the goal?</div></div></div><div class="p-layer"><div class="p-ln">02</div><div><div class="p-lh">Context</div><div class="p-ld">What to know?</div></div></div><div class="p-layer"><div class="p-ln">03</div><div><div class="p-lh">Behavior</div><div class="p-ld">Step by step?</div></div></div><div class="p-layer"><div class="p-ln">04</div><div><div class="p-lh">Guardrails</div><div class="p-ld">Never do what?</div></div></div><div class="p-layer"><div class="p-ln">05</div><div><div class="p-lh">Feedback</div><div class="p-ld">How to learn?</div></div></div></div></div><div class="stagger" style="flex:0 0 36%"><div class="p-ex"><strong>Placement Assistant</strong><br><br><strong>Intent:</strong> Prepare in 30 days<br><strong>Context:</strong> Resume, role, gaps<br><strong>Behavior:</strong> Plan, mock, revise<br><strong>Guardrails:</strong> No fake data<br><strong>Feedback:</strong> Quiz scores</div></div></div><div class="p-cap">Caption</div><div class="p-sn">8 / 25</div></div></div>
+</div>
+
+<!-- 8: ERROR -->
+<div class="scene" data-notes="SLIDE 10 — FAILURE: One of the biggest changes — failure becomes more complex. The system can misunderstand users, assume incorrectly, use the wrong tool, or act with too much confidence. Designers must think about recovery: What does the system do when unsure? How does it ask a better follow-up? How does it recover without losing trust? How does it prevent a bad action before it happens? In the AI era, good design is deeply about failure states." data-app="Error" data-entrance="error" data-cmd="[FAULT] guardrails.check() → NO_RULES_DEFINED">
+  <div class="agent-bar" style="background:#1a0505;border-color:rgba(255,95,87,.15)"><div class="abi" style="background:var(--r)">!</div><span class="abt" style="color:var(--r)">AgentRuntimeError — unhandled edge case</span><div class="abs"><div class="ab-dot" style="background:var(--r)"></div></div></div>
+  <div class="app-c"><div class="error-f"><div class="glitch" id="glitch8"></div><div class="err-flash" id="flash8"></div><div class="err-box" id="errBox8"><div class="err-ico">⚠</div><div class="err-title">OverconfidentActionError</div><div class="err-msg">Agent booked a 3 AM meeting — assumed availability. No guardrails defined.</div><div class="err-stack">agent.planner.schedule() → assumed=True<br>agent.actions.book(time="03:00")<br>guardrails.check() → NO RULES<br><br>→ No fallback · Trust: BROKEN</div><div class="err-note">This is why <strong style="color:var(--c)">designing for failure</strong> matters.</div></div></div></div>
+</div>
+
+<!-- 9: SLIDE Trust -->
+<div class="scene" data-notes="SLIDE 9 — TRUST: As AI becomes more capable, trust becomes critical. The moment a system can take actions or operate with autonomy, users ask deeper questions: Can I rely on this? Will it make mistakes? Will it do something unexpected? Trust must be designed into the behavior — clear communication, appropriate approval points, good explanations, safe defaults, visible system status, graceful handling of uncertainty. A powerful system without trust always feels risky." data-app="Presentation" data-entrance="slide" data-cmd="claude --recover --render slide 9 --guardrails">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Recovered — applying guardrails</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cyan"><div class="p-ct"><p class="p-date stagger">Trust & Safety</p><h2 class="stagger">Designing Intelligence = Designing Trust</h2><ul class="p-bullets stagger"><li>What is it allowed to do?</li><li>What must be visible?</li><li>What needs approval?</li><li>How does it explain itself?</li><li>What if it's wrong?</li></ul><p class="p-strong stagger">Good agentic design is responsible.</p></div><div class="p-cap">Caption</div><div class="p-sn">9 / 25</div></div></div>
+</div>
+
+<!-- 10: BROWSER -->
+<div class="scene" data-notes="SLIDE 11 — CAMPUS ASSISTANT: Imagine an agentic campus assistant for IIT Hyderabad. Students deal with fragmented info — timetables, room changes, clubs, deadlines, mess timings. A normal chatbot answers questions. An agentic assistant knows your courses, understands your day, detects conflicts, reminds about deadlines, surfaces the next most useful thing. The design question is not the interface — it is what the assistant should know, prioritize, and how it communicates without becoming annoying." data-app="Browser" data-entrance="browser" data-cmd="open --app browser --url campus-assistant.iith.ac.in">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing">Launching browser — loading prototype</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="browser-f"><div class="bbar"><div class="bdots"><div class="bdot" style="background:var(--r)"></div><div class="bdot" style="background:var(--y)"></div><div class="bdot" style="background:var(--g)"></div></div><span style="font-size:12px;color:var(--t3)">← →</span><div class="burl"><span class="lock">🔒</span><span class="burl-text" id="burlText"></span></div></div>
+  <div class="bcontent" style="padding:32px 44px" id="browserContent">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px"><div style="width:36px;height:36px;border-radius:10px;background:var(--c);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#000">C</div><div><div style="font-family:var(--d);font-size:18px;font-weight:700;color:#1a1a1a">Campus Assistant</div><div style="font-size:10px;color:#999">IIT Hyderabad · Agentic</div></div></div>
+    <div class="bc-card" id="bc1"><div style="font-size:10px;color:var(--o);font-weight:600;margin-bottom:5px">⚡ PRIORITY</div><div style="font-size:15px;color:#1a1a1a;font-weight:700;margin-bottom:3px">Lab shifted: Block A → Block C</div><div style="font-size:13px;color:#666">Next class in 8 min. Route via library corridor.</div></div>
+    <div class="bc-card" id="bc2"><div style="font-size:10px;color:var(--r);font-weight:600;margin-bottom:5px">📋 DUE TONIGHT</div><div style="font-size:15px;color:#1a1a1a;font-weight:700;margin-bottom:3px">DSA Quiz — 11:59 PM</div><div style="font-size:13px;color:#666">~25 min. Complete before dinner.</div></div>
+    <div class="bc-card" id="bc3"><div style="font-size:10px;color:var(--g);font-weight:600;margin-bottom:5px">📅 TODAY</div><div style="font-size:13px;color:#666">3 classes · Robotics Club 6 PM · Paneer tonight</div></div>
+  </div></div></div>
+</div>
+
+<!-- 11: FIGMA -->
+<div class="scene" data-notes="SLIDE 18 — SELF-HEALING UI: This shows how intelligence improves even basic components. A traditional component breaks or throws an error. A self-healing component tries to recover intelligently — understands what went wrong, explains it clearly, suggests next steps, adapts behavior. For example, a login system can detect whether failure is wrong password, network, or session timeout, and respond differently. Interfaces of the future should be smart when things go wrong, not just clean when things go right." data-app="Figma" data-entrance="figma" data-cmd="open --app figma --file agentic-system.fig --frame login">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing">Opening Figma — Self-Healing Login</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="figma-f"><div class="fbar"><div class="fb" style="font-weight:600;color:var(--t)">Agentic System</div><div class="fb act">Self-Healing Login</div><div class="fb">Components</div></div><div class="fcanvas"><div class="fcanvas-a"><div class="fframe" id="fframe11"><div class="fframe-l">Self-Healing Login — Error</div><div class="fsel" id="fsel11"><div class="fh tl"></div><div class="fh tr"></div><div class="fh bl"></div><div class="fh br"></div></div><div style="font-family:var(--s)"><div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:12px">Sign In</div><div style="margin-bottom:7px"><div style="font-size:9px;color:#999;margin-bottom:2px">Email</div><div style="background:#f0f0f0;padding:6px 10px;border-radius:4px;font-size:11px;border:1px solid #ddd">student@iith.ac.in</div></div><div style="margin-bottom:7px"><div style="font-size:9px;color:#999;margin-bottom:2px">Password</div><div style="background:#f0f0f0;padding:6px 10px;border-radius:4px;font-size:11px;border:2px solid var(--r)">••••••••</div></div><div style="background:rgba(255,95,87,.07);border:1px solid rgba(255,95,87,.12);border-radius:4px;padding:6px 10px;font-size:10px;color:#c0392b;margin-bottom:7px"><strong>Wrong password.</strong> Caps Lock on?<br><span style="color:#888;font-size:9px">2 left · <u>Reset</u> · <u>SSO</u></span></div><div style="background:var(--c);padding:6px;border-radius:4px;text-align:center;font-size:11px;font-weight:600;color:#000">Try Again</div></div></div></div><div class="fsb" id="fsb11"><div class="fst">Properties</div><div class="fsr"><span>State</span><span>Error</span></div><div class="fsr"><span>Self-Heal</span><span>Active</span></div><div class="fsr"><span>Detection</span><span>Caps Lock</span></div><div class="fsr"><span>Fallback</span><span>SSO</span></div><div style="margin-top:10px"><div class="fst">Logic</div></div><div class="fsr"><span>On fail</span><span>Detect</span></div><div class="fsr"><span>Adapt</span><span>Hint</span></div><div class="fsr"><span>Max</span><span>3</span></div><div class="fsr"><span>Escalate</span><span>After 3</span></div></div></div></div></div>
+</div>
+
+<!-- 12: SLIDE Toolkit -->
+<div class="scene" data-notes="SLIDE 16 — TOOLKIT: The toolkit is expanding. It is no longer enough to only know interface patterns. Next-gen designers also need systems thinking, workflow design, behavior design, context framing, logic mapping, evaluation thinking, and trust design. Designers need to become more computational in their thinking — understand how systems behave across time, context, action, and feedback. The future toolkit is wider, deeper, and far more interdisciplinary." data-app="Presentation" data-entrance="slide" data-cmd="claude --render slide 12 --layout toolkit">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Rendering toolkit</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cream"><div class="pxw"><div class="pxb" style="background:var(--o)"></div><div class="pxb" style="background:var(--o)"></div><div class="pxb" style="background:var(--o)"></div><div class="pxb" style="background:var(--o)"></div></div><div class="p-ct"><p class="p-date stagger">New Skills</p><h2 class="stagger">The Designer's New Toolkit</h2><div class="p-tags stagger"><span class="p-tag">Systems Thinking</span><span class="p-tag">Workflow Design</span><span class="p-tag">AI Behavior</span><span class="p-tag">Prompt Structuring</span><span class="p-tag">Context Framing</span><span class="p-tag">Logic Mapping</span><span class="p-tag">Trust & Safety</span></div><p class="p-strong stagger">Figma alone will not define the next generation.</p></div><div class="p-cap">Caption</div><div class="p-sn">16 / 25</div></div></div>
+</div>
+
+<!-- 13: TERMINAL Workshop -->
+<div class="scene" data-notes="SLIDE 20 — WORKSHOP: Up to this point, we discussed ideas and frameworks. Now we make it practical. Work in teams, choose a student-centered problem to solve through agentic workflow. The goal is not a perfect product — it is to practice thinking like agentic designers. Define user, goal, context, behavior, guardrails, and feedback loop. Design the intelligence layer, not just the interface layer." data-app="Terminal" data-entrance="terminal" data-cmd="claude --mode workshop --teams 6 --timer 15m">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing">Workshop mode — teams initialized</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="term-f"><div class="tl stagger"><span class="tp">claude --mode workshop --teams 6</span></div><div class="tl stagger"><span class="td">Initializing exercise...</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="tc tb">Challenge:</span> <span class="td">Design an agentic workflow</span></div><div class="tgap stagger"></div><div class="tl stagger">&nbsp;&nbsp;<span class="tc">01</span> Campus&nbsp;&nbsp;<span class="tc">02</span> Placement&nbsp;&nbsp;<span class="tc">03</span> Health</div><div class="tl stagger">&nbsp;&nbsp;<span class="tc">04</span> Hostel&nbsp;&nbsp;&nbsp;<span class="tc">05</span> Academic&nbsp;&nbsp;&nbsp;<span class="tc">06</span> Events</div><div class="tgap stagger"></div><div class="tblock stagger">user → goal → context → behavior → guardrails → feedback</div><div class="tl stagger"><span class="tg">✓</span> <span class="td">Timer: 15 minutes</span></div><div class="tl stagger"><span class="tc tb" style="font-size:15px">GO.</span></div></div></div>
+</div>
+
+<!-- 14: SLIDE Canvas -->
+<div class="scene" data-notes="SLIDE 21 — CANVAS: This canvas is your working structure. Start with the problem. Define the user and real goal. Think about what context the agent needs. Define actions, approvals, risks, recovery, and what the interface communicates. This is the five-layer framework applied practically. Do not overcomplicate — focus on clarity. If your team makes this logic strong, your concept will already be much better than most shallow AI product ideas." data-app="Presentation" data-entrance="slide" data-cmd="claude --render canvas --template">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Canvas template</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cream"><div class="p-ct wide"><p class="p-date stagger">Worksheet</p><h2 class="stagger">Agentic Design Canvas</h2><div class="p-canvas stagger"><div class="p-cc"><div class="p-ccl">Problem</div><div class="p-ccv">What to solve?</div></div><div class="p-cc"><div class="p-ccl">User</div><div class="p-ccv">Who?</div></div><div class="p-cc"><div class="p-ccl">Goal</div><div class="p-ccv">What goal?</div></div><div class="p-cc"><div class="p-ccl">Context</div><div class="p-ccv">What needed?</div></div><div class="p-cc"><div class="p-ccl">Actions</div><div class="p-ccv">What can it do?</div></div><div class="p-cc"><div class="p-ccl">Approvals</div><div class="p-ccv">What needs OK?</div></div><div class="p-cc"><div class="p-ccl">Risks</div><div class="p-ccv">What breaks?</div></div><div class="p-cc"><div class="p-ccl">Recovery</div><div class="p-ccv">How to fix?</div></div></div></div><div class="p-cap">Caption</div><div class="p-sn">21 / 25</div></div></div>
+</div>
+
+<!-- 15: CHAT Facilitator -->
+<div class="scene" data-notes="SLIDES 22-23 — SHARE-OUT: This filled example shows what good looks like — not just a feature list, but clearly defined user, goal, context, actions, approvals, risks, recovery, and communication. That is what makes it agentic. | When presenting, keep it simple: problem, what agent does, context needed, one guardrail, one decision you are proud of. The goal is clarity of thinking, not complexity. A simple idea with strong logic is more powerful than a flashy idea with weak structure." data-app="Chat" data-entrance="chat" data-cmd="open --app chat --mode facilitator">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-typing">Facilitator mode — team share-out</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="chat-f"><div class="ch-h"><div class="ch-dot"></div>Claude — Facilitator</div><div class="ch-body" id="chatBody15"><div class="cmsg bot"><span class="bt">Claude — Facilitator</span>60-second share-out.<br><strong>1.</strong> Problem? <strong>2.</strong> Agent does? <strong>3.</strong> Context? <strong>4.</strong> Guardrail? <strong>5.</strong> Proud of?</div><div class="cmsg usr">Team 1 ready!</div><div class="cmsg bot"><span class="bt">Claude</span>Go. 60 seconds. ⏱</div><div class="cmsg usr">Hostel agent — auto-logs complaints, escalates after 48h. Guardrail: never share details with others.</div><div class="cmsg bot"><span class="bt">Claude</span>Privacy by default — that's <strong>agentic design thinking</strong>. Next team! 🎯</div><div class="ch-typing" id="typing15"><span></span><span></span><span></span></div></div><div class="ch-input"><input placeholder="Team response..." readonly><button>Present</button></div></div></div>
+</div>
+
+<!-- 16: SLIDE Final -->
+<div class="scene" data-notes="SLIDE 24 — FINAL: The future of design is not just interfaces becoming prettier or tools becoming faster. It is about systems becoming more capable, adaptive, and autonomous. The role of the designer is becoming bigger, not smaller. Designers now shape how intelligence shows up in people's lives — usefulness, trust, control, clarity, recovery. If you are entering design or technology today, this is a huge moment. The people who learn to architect intent will shape what comes next." data-app="Presentation" data-entrance="slide" data-cmd="claude --render slide 24 --final">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Final slide</span><div class="abs"><div class="ab-dot"></div></div></div>
+  <div class="app-c"><div class="pslide cream"><div class="pxw"><div class="pxb"></div><div class="pxb"></div><div class="pxb" style="background:var(--o)"></div><div class="pxb" style="background:var(--o)"></div><div class="pxb"></div><div class="pxb" style="background:var(--o)"></div></div><div class="p-ct"><p class="p-date stagger">Final Takeaway</p><h1 class="stagger">The future of design is not static. It is agentic.</h1><p class="p-sub stagger">The next great designers will make intelligence useful, trustworthy, and human.</p></div><div class="p-cap">Caption</div><div class="p-sn">24 / 25</div></div></div>
+</div>
+
+<!-- 17: TERMINAL End -->
+<div class="scene" data-notes="SLIDE 25 — CLOSING: Design is no longer only about what a user sees. It is about what a system understands. That is the real shift. Once you start seeing that, your role changes. You are no longer just making interfaces. You are shaping behavior. You are shaping decisions. You are shaping how intelligence becomes useful in the real world. The future belongs to designers who can architect behavior, not just beautify screens. Thank you." data-app="Terminal" data-entrance="terminal" data-cmd="claude --session summary --end">
+  <div class="agent-bar"><div class="abi">C</div><span class="abt ab-done">Session complete</span><div class="abs"><div class="ab-dot" style="animation:none;opacity:.4"></div><span style="font-size:9px;color:var(--t3)">Ended</span></div></div>
+  <div class="app-c"><div class="term-f"><div class="tl stagger"><span class="tp">claude --session summary</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">25 slides delivered</span></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">5-layer framework taught</span></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">3 product examples explored</span></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">1 self-healing UI in Figma</span></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">6 team projects</span></div><div class="tl stagger"><span class="tg">✓</span> <span class="td">1 intentional crash (for learning)</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="tc tb" style="font-size:15px">"The real design material is not pixels. It is intent."</span></div><div class="tgap stagger"></div><div class="tl stagger"><span class="td">Thank you, IIT Hyderabad · 2026</span></div><div class="tl stagger"><span class="tp"><span class="cursor"></span></span></div></div></div>
+</div>
+
+</div>
+
+<!-- TASKBAR -->
+<div class="taskbar"><div class="tb-apps" id="tbApps"></div><div style="display:flex;align-items:center;gap:8px;margin-left:auto;padding-right:8px"><button onclick="openPresenterWindow()" style="background:rgba(0,255,224,.06);border:1px solid rgba(0,255,224,.1);color:var(--c);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:var(--m);font-size:9px;letter-spacing:1px">P &middot; PRESENTER</button><div class="tb-time" id="tbTime"></div></div></div>
+
+<!-- NOTES -->
+<div class="notes" id="np"><div class="notes-h"><h4>Notes</h4><button class="notes-x" onclick="toggleN()">&times;</button></div><div class="notes-b"><div class="notes-bi" id="nbi"></div><span class="notes-lbl">Your notes</span><textarea id="npn" placeholder="..."></textarea></div></div>
+
+<script>
+const scenes=[...document.querySelectorAll('.scene')];
+const prog=document.getElementById('prog');
+const nbi=document.getElementById('nbi'),npn=document.getElementById('npn'),np=document.getElementById('np');
+const tbApps=document.getElementById('tbApps'),tbTime=document.getElementById('tbTime');
+const cmdStrip=document.getElementById('cmdStrip'),cmdText=document.getElementById('cmdText');
+let cur=0,locked=false;const T=scenes.length;
+
+// Taskbar
+const appIcons={Terminal:'⬛',Presentation:'📊',Chat:'💬',Browser:'🌐',Figma:'🎨',Error:'⚠️'};
+function updateTB(bounceApp){
+  tbApps.innerHTML='';
+  Object.entries(appIcons).forEach(([name,ico])=>{
+    const d=document.createElement('div');
+    d.className='tb-a'+(name===scenes[cur].dataset.app?' active':'');
+    d.innerHTML=`<span class="tb-ico">${ico}</span>${name}<div class="tb-line"></div>`;
+    if(name===bounceApp)d.classList.add('bounce');
+    tbApps.appendChild(d);
+  });
+}
+function updateTime(){const d=new Date();tbTime.textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+setInterval(updateTime,10000);updateTime();
+
+// Notes
+function upN(){nbi.textContent=scenes[cur].dataset.notes||'';npn.value=localStorage.getItem('as4n_'+cur)||''}
+function toggleN(){np.classList.toggle('open')}
+npn.addEventListener('input',()=>localStorage.setItem('as4n_'+cur,npn.value));
+
+// Command strip typing
+function typeCmd(text,isError){
+  return new Promise(resolve=>{
+    cmdText.textContent='';
+    cmdStrip.classList.toggle('error-mode',!!isError);
+    cmdStrip.classList.add('show');
+    let i=0;
+    const iv=setInterval(()=>{
+      if(i<text.length){cmdText.textContent+=text[i];i++}
+      else{clearInterval(iv);setTimeout(resolve,300)}
+    },25);
+  });
+}
+function hideCmd(){cmdStrip.classList.remove('show')}
+
+// Scene entrance animations
+function playEntrance(scene){
+  return new Promise(resolve=>{
+    const type=scene.dataset.entrance;
+    const staggerEls=scene.querySelectorAll('.stagger');
+
+    // Stagger content
+    staggerEls.forEach((el,i)=>{
+      setTimeout(()=>el.style.cssText=`opacity:1;transform:translateY(0);transition:opacity .3s,transform .3s`,100+i*80);
+    });
+    scene.classList.add('played');
+
+    // Type-specific
+    if(type==='chat'){
+      const msgs=scene.querySelectorAll('.cmsg');
+      const typing=scene.querySelector('.ch-typing');
+      msgs.forEach(m=>m.classList.remove('show'));
+      let delay=200;
+      msgs.forEach((m,i)=>{
+        if(i>0&&m.classList.contains('bot')&&typing){setTimeout(()=>typing.classList.add('show'),delay);delay+=600;setTimeout(()=>typing.classList.remove('show'),delay)}
+        setTimeout(()=>m.classList.add('show'),delay);delay+=500;
+      });
+      setTimeout(resolve,delay+200);
+    }else if(type==='browser'){
+      // Type URL
+      const urlEl=document.getElementById('burlText');
+      const cards=[document.getElementById('bc1'),document.getElementById('bc2'),document.getElementById('bc3')];
+      if(urlEl){
+        const url='campus-assistant.iith.ac.in';urlEl.textContent='';
+        let i=0;const iv=setInterval(()=>{if(i<url.length){urlEl.textContent+=url[i];i++}else clearInterval(iv)},30);
+      }
+      cards.forEach(c=>{if(c)c.classList.remove('show')});
+      cards.forEach((c,i)=>{if(c)setTimeout(()=>c.classList.add('show'),600+i*350)});
+      setTimeout(resolve,600+cards.length*350+200);
+    }else if(type==='figma'){
+      const frame=document.getElementById('fframe11');
+      const sel=document.getElementById('fsel11');
+      const sb=document.getElementById('fsb11');
+      if(frame){frame.classList.remove('show');setTimeout(()=>frame.classList.add('show'),300)}
+      if(sel){sel.classList.remove('show');setTimeout(()=>sel.classList.add('show'),700)}
+      if(sb){sb.classList.remove('show');setTimeout(()=>sb.classList.add('show'),500)}
+      setTimeout(resolve,1000);
+    }else if(type==='error'){
+      const glitch=document.getElementById('glitch8');
+      const flash=document.getElementById('flash8');
+      const box=document.getElementById('errBox8');
+      if(glitch){glitch.classList.remove('show');setTimeout(()=>glitch.classList.add('show'),100)}
+      if(flash){flash.style.opacity='0';setTimeout(()=>{flash.style.transition='opacity .1s';flash.style.opacity='1';setTimeout(()=>flash.style.opacity='0',150)},200)}
+      if(box){box.classList.remove('show');setTimeout(()=>box.classList.add('show'),400)}
+      setTimeout(resolve,800);
+    }else{
+      setTimeout(resolve,staggerEls.length*80+300);
+    }
+  });
+}
+
+// Transition
+async function transitionTo(n){
+  if(n<0||n>=T||locked)return;
+  locked=true;
+  const nextScene=scenes[n];
+  const curScene=scenes[cur];
+  const cmd=nextScene.dataset.cmd;
+  const nextApp=nextScene.dataset.app;
+  const curApp=curScene.dataset.app;
+  const isError=nextApp==='Error';
+
+  // 1. Bounce taskbar icon
+  updateTB(nextApp);
+
+  // 2. Command strip types
+  if(cmd){await typeCmd((isError?'':' $ ')+cmd,isError)}
+
+  // 3. Exit current scene
+  const exitClass='exit-'+(curApp||'slide').toLowerCase();
+  curScene.classList.add(exitClass);
+  await new Promise(r=>setTimeout(r,300));
+  curScene.classList.remove('active',exitClass);
+  curScene.style.opacity='0';
+  curScene.style.transform='none';
+  curScene.style.pointerEvents='none';
+
+  // 4. Hide command strip
+  hideCmd();
+
+  // 5. Enter new scene
+  cur=n;
+  const enterClass='enter-'+(nextApp||'slide').toLowerCase();
+  nextScene.style.opacity='1';
+  nextScene.style.transform='none';
+  nextScene.style.pointerEvents='auto';
+  nextScene.classList.add('active',enterClass);
+  prog.style.width=((cur+1)/T*100)+'%';
+  updateTB();upN();localStorage.setItem('as4',cur);
+
+  await new Promise(r=>setTimeout(r,400));
+  nextScene.classList.remove(enterClass);
+  // Force visible after animation ends
+  nextScene.style.opacity='1';
+  nextScene.style.transform='none';
+
+  // 6. Play entrance animation
+  await playEntrance(nextScene);
+
+  locked=false;
+}
+
+function next(){transitionTo(cur+1)}
+function prev(){if(locked)return;locked=true;const n=Math.max(0,cur-1);scenes[cur].classList.remove('active');scenes[cur].style.opacity='0';scenes[cur].style.pointerEvents='none';cur=n;scenes[cur].classList.add('active');scenes[cur].style.opacity='1';scenes[cur].style.transform='none';scenes[cur].style.pointerEvents='auto';scenes[cur].classList.add('played');scenes[cur].querySelectorAll('.stagger').forEach(e=>e.style.cssText='opacity:1;transform:translateY(0)');prog.style.width=((cur+1)/T*100)+'%';updateTB();upN();localStorage.setItem('as4',cur);locked=false}
+
+// goToScene: instant jump (no animation) — used by iframe preview
+function goToScene(n){
+  if(n<0||n>=T)return;
+  scenes[cur].classList.remove('active');scenes[cur].style.opacity='0';scenes[cur].style.pointerEvents='none';
+  cur=n;
+  scenes[cur].classList.add('active','played');scenes[cur].style.opacity='1';scenes[cur].style.transform='none';scenes[cur].style.pointerEvents='auto';
+  scenes[cur].querySelectorAll('.stagger').forEach(function(e){e.style.cssText='opacity:1;transform:translateY(0)'});
+  // Show chat/browser/figma elements
+  scenes[cur].querySelectorAll('.cmsg').forEach(function(e){e.classList.add('show')});
+  scenes[cur].querySelectorAll('.bc-card').forEach(function(e){e.classList.add('show')});
+  var ff=scenes[cur].querySelector('.fframe');if(ff)ff.classList.add('show');
+  var fs=scenes[cur].querySelector('.fsel');if(fs)fs.classList.add('show');
+  var fb=scenes[cur].querySelector('.fsb');if(fb)fb.classList.add('show');
+  var gl=scenes[cur].querySelector('.glitch');if(gl)gl.classList.add('show');
+  var eb=scenes[cur].querySelector('.err-box');if(eb)eb.classList.add('show');
+  prog.style.width=((cur+1)/T*100)+'%';
+  updateTB();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'){if(e.key==='Escape'){e.target.blur();toggleN()}return}
+  if(cur===0&&introRunning){skipIntro();return}
+  switch(e.key){
+    case'ArrowRight':case'ArrowDown':case' ':e.preventDefault();next();break;
+    case'ArrowLeft':case'ArrowUp':e.preventDefault();prev();break;
+    case'Home':e.preventDefault();prev();break;case'End':e.preventDefault();break;
+    case'n':case'N':toggleN();break;case'f':case'F':document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();break;
+    case'p':case'P':openPresenterWindow();break;
+    case'Escape':np.classList.contains('open')&&toggleN();break;
+  }
+});
+let touchX=0;
+document.addEventListener('touchstart',e=>touchX=e.touches[0].clientX);
+document.addEventListener('touchend',e=>{const d=touchX-e.changedTouches[0].clientX;Math.abs(d)>60&&(d>0?next():prev())});
+
+// ══ PRESENTER (dual monitor via separate file + localStorage sync) ══
+function openPresenterWindow(){
+  window.open('presenter.html','presenter_notes','width=960,height=700');
+}
+
+// Sync to presenter via localStorage
+function syncPresenter(){
+  var scene=scenes[cur];
+  var nextScene=scenes[cur+1];
+  var nextHTML=nextScene?getSceneSummary(nextScene,cur+1):'';
+  // Extract title, subtitle, detail from current scene
+  var title='',subtitle='',detail='';
+  var h=scene.querySelector('h1,h2,.err-title');
+  if(h)title=h.textContent;
+  var sub=scene.querySelector('.p-sub,.p-strong');
+  if(sub)subtitle=sub.textContent;
+  var app=scene.dataset.app||'';
+  if(app==='Terminal'){
+    var tlines=scene.querySelectorAll('.tl');
+    var bits=[];for(var i=0;i<Math.min(tlines.length,5);i++)bits.push(tlines[i].textContent);
+    detail=bits.join(' | ');
+    if(!title)title=bits[0]||'Terminal';
+  }
+  if(app==='Chat'){
+    var msgs=scene.querySelectorAll('.cmsg');
+    var bits2=[];for(var j=0;j<Math.min(msgs.length,3);j++)bits2.push(msgs[j].textContent.substring(0,80));
+    detail=bits2.join(' → ');
+    if(!title)title='Chat Session';
+  }
+  if(app==='Browser'){if(!title)title='Campus Assistant';subtitle='campus-assistant.iith.ac.in'}
+  if(app==='Figma'){if(!title)title='Self-Healing Login';subtitle='Figma — Agentic Design System'}
+  if(app==='Error'){subtitle='Agent encountered an unhandled edge case';detail='OverconfidentActionError — no guardrails defined'}
+  // Capture full scene HTML for live preview
+  var sceneHTML='';
+  try{sceneHTML=scene.innerHTML}catch(e2){}
+  try{
+    localStorage.setItem('agent_pres_sync',JSON.stringify({
+      t:Date.now(),notes:scene.dataset.notes||'',sceneNum:cur+1,total:T,
+      app:app,title:title,subtitle:subtitle,detail:detail,
+      nextHTML:nextHTML,sceneHTML:sceneHTML,
+      sceneClasses:scene.className
+    }));
+  }catch(e){}
+}
+
+function getSceneSummary(scene,idx){
+  var app=scene.dataset.app||'Unknown';
+  var colors={Terminal:'#00FFE0',Presentation:'#FF8C42',Chat:'#00FFE0',Browser:'#28c840',Figma:'#a259ff',Error:'#ff5f57'};
+  var color=colors[app]||'#999';
+  var text='';
+  var h=scene.querySelector('h1,h2');
+  if(h)text+=h.textContent;
+  var sub=scene.querySelector('.p-sub,.p-strong,.err-title');
+  if(sub)text+=' — '+sub.textContent;
+  if(app==='Terminal'){var lines=scene.querySelectorAll('.tl');text=[...lines].slice(0,3).map(function(l){return l.textContent}).join(' | ')}
+  if(app==='Chat'){var msgs=scene.querySelectorAll('.cmsg');text=[...msgs].slice(0,2).map(function(m){return m.textContent.substring(0,60)+'...'}).join(' | ')}
+  return '<div style="padding:14px"><div style="font-size:10px;font-weight:700;color:'+color+';text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">'+app+' — Scene '+(idx+1)+'</div><div style="font-size:14px;line-height:1.5;color:#ccc">'+text+'</div></div>';
+}
+
+// Listen for commands from presenter window (via localStorage)
+// Initialize lastCmdTime to NOW so stale commands from previous sessions are ignored
+var lastCmdTime=Date.now();
+setInterval(function(){
+  if(introRunning||locked)return; // Don't process during boot or transitions
+  try{
+    var raw=localStorage.getItem('agent_pres_cmd');
+    if(!raw)return;
+    var data=JSON.parse(raw);
+    if(data.t<=lastCmdTime)return; // Only process newer commands
+    lastCmdTime=data.t;
+    if(data.cmd==='next')next();
+    else if(data.cmd==='prev')prev();
+    else if(data.cmd==='restart'){localStorage.removeItem('as4');localStorage.removeItem('agent_pres_cmd');location.reload()}
+  }catch(e){}
+},300);
+
+// Hook sync into upN
+var origUpN=upN;
+upN=function(){origUpN();syncPresenter()};
+
+// Boot animation
+let introRunning=false;
+function skipIntro(){introRunning=false;transitionTo(1)}
+async function boot(){
+  introRunning=true;const b=document.getElementById('t0'),ab=document.getElementById('ab0');
+  const lines=[
+    {h:'<span class="tp">claude --session masterclass-iith</span>',d:400},
+    {h:'<span class="td">Model: claude-opus-4 · Mode: agentic · Context: 200K</span>',d:250},
+    {h:'<div class="tgap"></div>',d:80},
+    {h:'<span class="tu">Design a masterclass on Agentic Designers for IIT Hyderabad. Full range: terminal, slides, chat, browser, Figma, even a crash.</span>',d:600},
+    {h:'<div class="tgap"></div>',d:150},
+    {h:'<span class="to tb">⟳ Thinking</span><span class="td"> — planning 18-scene arc... (1.4s)</span>',d:1400},
+    {h:'<div class="tgap"></div>',d:80},
+    {h:'<span class="tc tb">Flow:</span> <span class="td">Terminal→Slide→Slide→Chat→Slide→Slide→Terminal→Slide→💥Error→Slide→Browser→Figma→Slide→Terminal→Slide→Chat→Slide→Terminal</span>',d:400},
+    {h:'<div class="tgap"></div>',d:150},
+    {h:'<span class="tg">✓</span> <span class="td">18 scenes · 6 formats · 1 crash</span>',d:200},
+    {h:'<span class="tg">✓</span> <span class="td">Transitions configured</span>',d:150},
+    {h:'<div class="tgap"></div>',d:200},
+    {h:'<span class="tc tb">Launching...</span>',d:600},
+  ];
+  for(const l of lines){
+    if(!introRunning)return;
+    const d=document.createElement('div');d.className='tl';d.innerHTML=l.h;
+    d.style.cssText='opacity:0;transform:translateY(3px);transition:all .2s';
+    b.appendChild(d);b.scrollTop=b.scrollHeight;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>d.style.cssText='opacity:1;transform:translateY(0);transition:all .2s'));
+    await new Promise(r=>setTimeout(r,l.d));
+  }
+  if(ab){ab.className='abt ab-done';ab.textContent='Ready — launching...'}
+  await new Promise(r=>setTimeout(r,400));
+  if(introRunning){introRunning=false;transitionTo(1)}
+}
+
+// Clean up stale presenter command on fresh load
+localStorage.removeItem('agent_pres_cmd');
+
+const sv=localStorage.getItem('as4');
+if(sv&&parseInt(sv)>0){
+  cur=parseInt(sv);scenes[0].classList.remove('active');scenes[0].style.opacity='0';scenes[0].style.pointerEvents='none';
+  scenes[cur].classList.add('active');scenes[cur].style.opacity='1';scenes[cur].style.transform='none';scenes[cur].style.pointerEvents='auto';
+  scenes[cur].classList.add('played');scenes[cur].querySelectorAll('.stagger').forEach(e=>e.style.cssText='opacity:1;transform:translateY(0)');
+  prog.style.width=((cur+1)/T*100)+'%';updateTB();upN();
+}else{updateTB();upN();boot()}
+</script>
+</body>
+</html>

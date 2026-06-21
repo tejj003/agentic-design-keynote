@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecting Intent: The Rise of the Agentic Designers</title>
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --black:   #161616;
+  --g100:    #262626;
+  --g90:     #393939;
+  --g80:     #525252;
+  --g70:     #6f6f6f;
+  --g50:     #8d8d8d;
+  --g30:     #c6c6c6;
+  --g20:     #dde1e6;
+  --g10:     #f4f4f4;
+  --white:   #ffffff;
+  --b60:     #0f62fe;
+  --b50:     #4589ff;
+  --b40:     #78a9ff;
+  --b20:     #a6c8ff;
+  --b70:     #0043ce;
+  --b80:     #002d9c;
+  --b10:     #edf5ff;
+  --teal:    #08bdba;
+  --green:   #42be65;
+  --red:     #ff8389;
+  --orange:  #ff832b;
+  --purple:  #be95ff;
+  --sans:    'IBM Plex Sans', sans-serif;
+  --cond:    'IBM Plex Sans Condensed', sans-serif;
+  --mono:    'IBM Plex Mono', monospace;
+
+  --ease:    cubic-bezier(.22,1,.36,1);
+  --ease-in: cubic-bezier(.4,0,1,1);
+  --bounce:  cubic-bezier(.34,1.56,.64,1);
+}
+
+html,body{height:100%;width:100%;overflow:hidden;background:#000;user-select:none}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--black)}
+
+/* ─── REDUCED MOTION ─── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ─── DECK ─── */
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+
+/* ─── SLIDE ─── */
+.slide{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;
+  overflow:hidden;
+}
+.slide.active{display:flex}
+
+/* ─── SLIDE THEMES ─── */
+.s-dark{background:var(--black);color:var(--g10)}
+.s-mid {background:var(--g100);color:var(--g10)}
+.s-light{background:var(--white);color:var(--black)}
+.s-gray{background:var(--g10);color:var(--black)}
+.s-blue{background:var(--b60);color:#fff}
+.s-deep{background:var(--b70);color:#fff}
+.s-navy{background:var(--b80);color:#fff}
+
+/* ─── ANIMATE-IN CLASSES ─── */
+/* Every child with [data-a] starts invisible and animates when slide becomes active */
+[data-a]{
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity .55s var(--ease), transform .55s var(--ease);
+}
+.slide.active [data-a]{opacity:1;transform:translateY(0)}
+
+/* Stagger delays */
+[data-a="1"]{transition-delay:.05s}
+[data-a="2"]{transition-delay:.15s}
+[data-a="3"]{transition-delay:.25s}
+[data-a="4"]{transition-delay:.35s}
+[data-a="5"]{transition-delay:.45s}
+[data-a="6"]{transition-delay:.55s}
+[data-a="7"]{transition-delay:.65s}
+[data-a="8"]{transition-delay:.75s}
+
+/* Slide-from-right variant */
+[data-ax]{
+  opacity:0;
+  transform:translateX(32px);
+  transition:opacity .5s var(--ease),transform .5s var(--ease);
+}
+.slide.active [data-ax]{opacity:1;transform:translateX(0)}
+[data-ax="1"]{transition-delay:.1s}
+[data-ax="2"]{transition-delay:.2s}
+[data-ax="3"]{transition-delay:.3s}
+[data-ax="4"]{transition-delay:.4s}
+[data-ax="5"]{transition-delay:.5s}
+[data-ax="6"]{transition-delay:.6s}
+
+/* Scale-in variant */
+[data-as]{
+  opacity:0;
+  transform:scale(.9);
+  transition:opacity .45s var(--ease),transform .45s var(--ease);
+}
+.slide.active [data-as]{opacity:1;transform:scale(1)}
+[data-as="1"]{transition-delay:.05s}
+[data-as="2"]{transition-delay:.12s}
+[data-as="3"]{transition-delay:.19s}
+[data-as="4"]{transition-delay:.26s}
+[data-as="5"]{transition-delay:.33s}
+[data-as="6"]{transition-delay:.4s}
+[data-as="7"]{transition-delay:.47s}
+[data-as="8"]{transition-delay:.54s}
+
+/* ─── SLIDE TRANSITION (JS-driven) ─── */
+.slide.exit-back  {animation:exitBack  .35s var(--ease-in) forwards}
+.slide.exit-fwd   {animation:exitFwd   .35s var(--ease-in) forwards}
+.slide.enter-back {animation:enterBack .4s  var(--ease)    forwards}
+.slide.enter-fwd  {animation:enterFwd  .4s  var(--ease)    forwards}
+
+@keyframes exitFwd   {to{opacity:0;transform:translateY(-40px) scale(.96)}}
+@keyframes exitBack  {to{opacity:0;transform:translateY(40px)  scale(.96)}}
+@keyframes enterFwd  {from{opacity:0;transform:translateY(40px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes enterBack {from{opacity:0;transform:translateY(-40px)scale(.97)}to{opacity:1;transform:none}}
+
+/* ─── PROGRESS BAR ─── */
+.prog{height:3px;background:var(--b60);position:fixed;top:0;left:0;z-index:500;transition:width .35s var(--ease)}
+.s-dark .prog,.s-mid .prog{background:var(--b40)}
+
+/* ─── SLIDE CHROME ─── */
+.chrome{
+  display:none;
+}
+.s-light .chrome,.s-gray .chrome{border-bottom-color:var(--g20)}
+.chrome-l{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:3px;color:var(--b60)}
+.s-dark .chrome-l,.s-mid .chrome-l,.s-blue .chrome-l,.s-deep .chrome-l,.s-navy .chrome-l{color:#fff}
+.chrome-c{font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--g70)}
+.s-dark .chrome-c,.s-mid .chrome-c,.s-blue .chrome-c,.s-deep .chrome-c,.s-navy .chrome-c{color:rgba(255,255,255,.45)}
+.chrome-r{font-family:var(--mono);font-size:12px;color:var(--g70)}
+.s-dark .chrome-r,.s-mid .chrome-r,.s-blue .chrome-r,.s-deep .chrome-r,.s-navy .chrome-r{color:rgba(255,255,255,.35)}
+
+.chrome-bot{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 60px;flex-shrink:0;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.s-light .chrome-bot,.s-gray .chrome-bot{border-top-color:var(--g20)}
+.chrome-bot .lbl{font-family:var(--mono);font-size:13px;color:var(--g70);letter-spacing:1px;text-transform:uppercase}
+.s-dark .chrome-bot .lbl,.s-mid .chrome-bot .lbl,.s-blue .chrome-bot .lbl,.s-deep .chrome-bot .lbl,.s-navy .chrome-bot .lbl{color:rgba(255,255,255,.35)}
+
+/* ─── DECORATIVE GEOMETRY ─── */
+.geo{position:absolute;pointer-events:none;z-index:0}
+.geo-grid{
+  background-image:
+    linear-gradient(rgba(15,98,254,.06) 1px, transparent 1px),
+    linear-gradient(90deg,rgba(15,98,254,.06) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.geo-dots{
+  background-image:radial-gradient(rgba(15,98,254,.18) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+.geo-line-v{width:1px;background:linear-gradient(to bottom,transparent,rgba(15,98,254,.4),transparent)}
+.geo-line-h{height:1px;background:linear-gradient(to right,transparent,rgba(15,98,254,.4),transparent)}
+
+/* Pulsing dot */
+.pulse-dot{
+  width:10px;height:10px;border-radius:50%;background:var(--b40);
+  display:inline-block;margin-right:8px;vertical-align:middle;
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(120,169,255,.5)}50%{box-shadow:0 0 0 8px rgba(120,169,255,0)}}
+
+/* Scanning line */
+.scan{
+  display:none;
+}
+@keyframes scan{0%{top:-2px}100%{top:100%}}
+
+/* Glyph icon */
+.glyph{
+  font-size:28px;line-height:1;display:inline-block;
+  animation:floatY 4s ease-in-out infinite;
+}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.glyph.s2{animation-delay:.6s}
+.glyph.s3{animation-delay:1.2s}
+.glyph.s4{animation-delay:1.8s}
+
+/* System glyph tokens (replaces emoji-style icons) */
+.sys-glyph{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+  height:34px;
+  padding:0 7px;
+  border:1px solid currentColor;
+  border-radius:2px;
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.8px;
+  line-height:1;
+  text-transform:uppercase;
+  background:rgba(255,255,255,.04);
+}
+.sys-glyph.sm{min-width:28px;height:28px;font-size:10px;padding:0 6px}
+.sys-glyph.lg{min-width:40px;height:40px;font-size:12px;padding:0 8px}
+.sys-glyph.ghost{opacity:.45}
+.s-light .sys-glyph,.s-gray .sys-glyph{background:rgba(15,98,254,.06)}
+
+/* Corner accent */
+.corner-accent{
+  position:absolute;top:0;right:0;
+  width:320px;height:320px;
+  background:
+    linear-gradient(135deg,transparent 49%,rgba(15,98,254,.12) 50%);
+  pointer-events:none;z-index:0;
+}
+.corner-accent-sm{
+  position:absolute;bottom:0;left:0;
+  width:200px;height:200px;
+  background:linear-gradient(315deg,transparent 49%,rgba(120,169,255,.08) 50%);
+  pointer-events:none;z-index:0;
+}
+
+/* ─── TYPOGRAPHY ─── */
+.eyebrow{
+  font-family:var(--mono);font-size:15px;font-weight:500;
+  letter-spacing:2.2px;text-transform:uppercase;
+  color:var(--b60);display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.s-dark .eyebrow,.s-mid .eyebrow{color:var(--b40)}
+.s-blue .eyebrow,.s-deep .eyebrow,.s-navy .eyebrow{color:rgba(255,255,255,.7)}
+.eyebrow::before{content:'';display:inline-block;width:18px;height:2px;background:currentColor;flex-shrink:0}
+
+h1{font-family:var(--cond);font-weight:700;font-size:clamp(56px,7vw,112px);line-height:1.02;letter-spacing:-.8px;margin-bottom:14px}
+h2{font-family:var(--cond);font-weight:700;font-size:clamp(36px,4.5vw,74px);line-height:1.05;letter-spacing:-.4px;margin-bottom:10px}
+h3{font-family:var(--cond);font-weight:600;font-size:clamp(20px,2.2vw,32px);line-height:1.1;margin-bottom:4px}
+h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:5px}
+.s-dark h4,.s-mid h4{color:var(--b40)}
+.s-blue h4,.s-deep h4,.s-navy h4{color:rgba(255,255,255,.7)}
+.lead{font-size:clamp(18px,1.7vw,28px);line-height:1.5;color:var(--g80);max-width:880px}
+.s-dark .lead,.s-mid .lead,.s-blue .lead,.s-deep .lead,.s-navy .lead{color:rgba(255,255,255,.8)}
+.kicker{font-size:clamp(15px,1.3vw,20px);line-height:1.5;color:var(--g70)}
+.s-dark .kicker,.s-mid .kicker,.s-blue .kicker,.s-deep .kicker,.s-navy .kicker{color:rgba(255,255,255,.6)}
+
+/* ─── HERO NUMBER ─── */
+.hero-num{
+  font-family:var(--cond);font-weight:700;
+  font-size:clamp(80px,12vw,180px);
+  line-height:.9;letter-spacing:-4px;
+  color:var(--b60);
+  animation:numPop .7s var(--bounce) both;
+}
+.s-dark .hero-num,.s-mid .hero-num{color:var(--b40)}
+@keyframes numPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+
+/* ─── STAT BLOCK ─── */
+.stat-strip{display:grid;grid-auto-columns:1fr;grid-auto-flow:column;border-top:1px solid rgba(255,255,255,.1);margin-top:0}
+.s-light .stat-strip,.s-gray .stat-strip{border-top-color:var(--g20)}
+.stat-cell{padding:18px 22px;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:4px}
+.s-light .stat-cell,.s-gray .stat-cell{border-right-color:var(--g20)}
+.stat-cell:last-child{border-right:none}
+.stat-n{font-family:var(--cond);font-weight:700;font-size:clamp(34px,5vw,70px);line-height:.95;color:var(--b60)}
+.s-dark .stat-n,.s-mid .stat-n{color:var(--b40)}
+.s-blue .stat-n,.s-deep .stat-n,.s-navy .stat-n{color:#fff}
+.stat-l{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70)}
+.s-dark .stat-l,.s-mid .stat-l{color:var(--g50)}
+.s-blue .stat-l,.s-deep .stat-l,.s-navy .stat-l{color:rgba(255,255,255,.7)}
+.stat-d{font-size:13px;color:var(--g80);line-height:1.4;margin-top:3px}
+.s-dark .stat-d,.s-mid .stat-d{color:rgba(255,255,255,.5)}
+.s-blue .stat-d,.s-deep .stat-d,.s-navy .stat-d{color:rgba(255,255,255,.65)}
+
+/* ─── CARDS ─── */
+.card-row{display:grid;gap:1px;background:rgba(255,255,255,.08)}
+.s-light .card-row,.s-gray .card-row{background:var(--g20)}
+
+.card{
+  background:var(--g100);padding:22px 20px;
+  display:flex;flex-direction:column;gap:6px;
+  position:relative;overflow:hidden;
+  transition:background .2s ease,transform .2s ease;
+  cursor:default;
+}
+.card::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--b60);
+  transform:scaleY(0);transform-origin:bottom;
+  transition:transform .3s var(--ease);
+}
+.card:hover{background:var(--g90)}
+.card:hover::after{transform:scaleY(1)}
+.s-light .card,.s-gray .card{background:var(--white)}
+.s-light .card:hover,.s-gray .card:hover{background:var(--g10)}
+.s-blue .card{background:rgba(255,255,255,.1)}
+.s-blue .card:hover{background:rgba(255,255,255,.17)}
+.s-deep .card{background:rgba(255,255,255,.08)}
+.s-deep .card:hover{background:rgba(255,255,255,.14)}
+.card h3{font-size:clamp(16px,1.6vw,22px)}
+.card p{font-size:16px;line-height:1.5;color:var(--g50)}
+.s-dark .card p,.s-mid .card p{color:rgba(255,255,255,.55)}
+.s-blue .card p,.s-deep .card p{color:rgba(255,255,255,.75)}
+
+/* Big icon card variant */
+.icon-card{
+  background:var(--g100);border:1px solid var(--g90);
+  padding:22px 20px;display:flex;flex-direction:column;gap:8px;
+  position:relative;overflow:hidden;
+  transition:all .25s var(--ease);
+}
+.icon-card:hover{border-color:var(--b60);transform:translateY(-3px);box-shadow:0 16px 40px rgba(15,98,254,.2)}
+.s-light .icon-card,.s-gray .icon-card{background:var(--white);border-color:var(--g20)}
+.s-light .icon-card:hover,.s-gray .icon-card:hover{border-color:var(--b60);box-shadow:0 8px 24px rgba(15,98,254,.12)}
+.icon-card .ico{font-size:26px;margin-bottom:4px;display:block}
+.icon-card .tag{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:2px}
+.s-dark .icon-card .tag,.s-mid .icon-card .tag{color:var(--b40)}
+
+/* ─── COMPARISON ─── */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.08)}
+.s-light .compare,.s-gray .compare{background:var(--g20)}
+.compare-col{display:flex;flex-direction:column}
+.compare-head{
+  padding:20px 28px;
+  font-family:var(--cond);font-size:clamp(22px,2.1vw,30px);font-weight:700;
+  display:flex;align-items:center;gap:10px;
+}
+.compare-old .compare-head{background:var(--g90);color:var(--g30)}
+.compare-new .compare-head{background:var(--b60);color:#fff}
+.compare-row{
+  flex:1;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:clamp(18px,1.6vw,24px);line-height:1.4;
+  display:flex;align-items:center;gap:12px;
+}
+.s-light .compare-row,.s-gray .compare-row{border-bottom-color:var(--g20)}
+.compare-old .compare-row{background:var(--g100);color:var(--g50)}
+.compare-new .compare-row{background:var(--g100);color:var(--g10)}
+.compare-new .compare-row .rmark{color:var(--b40);font-weight:600}
+.s-light .compare-old .compare-row{background:var(--g10);color:var(--g70)}
+.s-light .compare-new .compare-row{background:var(--b10);color:var(--black)}
+.s-light .compare-new .compare-row .rmark{color:var(--b60)}
+
+/* ─── BULLETS ─── */
+.bl{list-style:none}
+.bl li{
+  position:relative;padding:8px 0 8px 22px;
+  font-size:clamp(17px,1.5vw,24px);line-height:1.5;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.s-light .bl li,.s-gray .bl li{border-bottom-color:var(--g20)}
+.bl li:last-child{border-bottom:none}
+.bl li::before{
+  content:'';position:absolute;left:0;top:16px;
+  width:8px;height:8px;background:var(--b60);
+  clip-path:polygon(0 50%,50% 0,100% 50%,50% 100%);
+}
+.s-dark .bl li::before,.s-mid .bl li::before{background:var(--b40)}
+.s-blue .bl li::before,.s-deep .bl li::before,.s-navy .bl li::before{background:#fff}
+
+/* ─── QUOTE ─── */
+.quote{
+  border-left:4px solid var(--b60);
+  padding:14px 20px;background:rgba(15,98,254,.06);
+}
+.s-dark .quote,.s-mid .quote{background:rgba(15,98,254,.14);border-left-color:var(--b40)}
+.s-blue .quote,.s-deep .quote,.s-navy .quote{background:rgba(255,255,255,.1);border-left-color:rgba(255,255,255,.6)}
+.quote-text{font-size:clamp(17px,1.5vw,22px);line-height:1.6;font-style:italic}
+.s-dark .quote-text,.s-mid .quote-text{color:var(--g20)}
+.s-blue .quote-text,.s-deep .quote-text,.s-navy .quote-text{color:#fff}
+.quote-attr{font-family:var(--mono);font-size:11px;color:var(--g70);margin-top:5px}
+.s-dark .quote-attr,.s-mid .quote-attr{color:var(--g50)}
+.s-blue .quote-attr,.s-deep .quote-attr,.s-navy .quote-attr{color:rgba(255,255,255,.6)}
+
+/* ─── PIPELINE ─── */
+.pipeline{display:flex;align-items:stretch;gap:1px;background:rgba(255,255,255,.07)}
+.s-light .pipeline,.s-gray .pipeline{background:var(--g20)}
+.pipe-step{
+  flex:1;padding:16px 10px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  font-family:var(--cond);font-weight:600;font-size:15px;
+  background:var(--g100);
+  transition:background .2s ease;
+}
+.pipe-step:hover{background:var(--g90)}
+.pipe-step .ico{font-size:22px;margin-bottom:2px}
+.pipe-step.hi{background:var(--b60);color:#fff}
+.pipe-step.hi .kicker{color:rgba(255,255,255,.8)}
+.s-light .pipe-step,.s-gray .pipe-step{background:var(--white)}
+.s-light .pipe-step:hover,.s-gray .pipe-step:hover{background:var(--g10)}
+.s-light .pipe-step.hi,.s-gray .pipe-step.hi{background:var(--b60);color:#fff}
+
+/* ─── SHIFT ROW ─── */
+.shift-row{
+  display:flex;align-items:center;gap:14px;padding:9px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:clamp(17px,1.5vw,24px);
+  transition:transform .15s ease;
+}
+.s-light .shift-row,.s-gray .shift-row{border-bottom-color:var(--g20)}
+.shift-row:hover{transform:translateX(6px)}
+.shift-row:last-child{border-bottom:none}
+.shift-old{opacity:.3;text-decoration:line-through;flex:1}
+.shift-arr{color:var(--b60);font-weight:700;font-size:20px;flex-shrink:0}
+.s-dark .shift-arr,.s-mid .shift-arr{color:var(--b40)}
+.s-blue .shift-arr,.s-deep .shift-arr,.s-navy .shift-arr{color:rgba(255,255,255,.8)}
+.shift-new{font-weight:600;flex:1}
+
+/* ─── RISK TIERS ─── */
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--g90)}
+.risk-cell{padding:20px 18px;background:var(--g100);display:flex;flex-direction:column;gap:6px}
+.risk-label{font-family:var(--mono);font-size:11px;letter-spacing:2px;font-weight:600;margin-bottom:4px}
+.risk-green{color:var(--green)}
+.risk-blue{color:var(--b40)}
+.risk-red{color:var(--red)}
+.risk-comp{font-family:var(--mono);font-size:11px;color:var(--g70);margin-top:6px}
+
+/* ─── TAGS ─── */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{
+  padding:6px 14px;font-family:var(--mono);font-size:14px;letter-spacing:.5px;
+  background:rgba(15,98,254,.1);border:1px solid rgba(15,98,254,.2);color:var(--b50);
+  transition:all .15s ease;cursor:default;
+}
+.tag:hover{background:var(--b60);color:#fff;border-color:var(--b60)}
+.s-dark .tag,.s-mid .tag{background:rgba(120,169,255,.1);border-color:rgba(120,169,255,.2);color:var(--b40)}
+.s-dark .tag:hover,.s-mid .tag:hover{background:var(--b60);color:#fff}
+.s-blue .tag,.s-deep .tag,.s-navy .tag{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+
+/* ─── BOLD DIAGRAM HELPERS ─── */
+/* numbered node badge */
+.gnode{
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  width:46px;height:46px;border-radius:50%;
+  font-family:var(--cond);font-weight:700;font-size:20px;
+  background:var(--b60);color:#fff;
+  box-shadow:0 6px 18px rgba(15,98,254,.28);
+}
+.gnode.lg{width:60px;height:60px;font-size:26px}
+.gnode.sm{width:34px;height:34px;font-size:15px;box-shadow:none}
+.gnode.hollow{background:transparent;border:2px solid var(--b40);color:var(--b40);box-shadow:none}
+.s-light .gnode.hollow,.s-gray .gnode.hollow{border-color:var(--b60);color:var(--b60)}
+/* flow connector arrow */
+.flow-arrow{
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  color:var(--b40);font-size:24px;font-weight:700;padding:0 4px;
+}
+.s-light .flow-arrow,.s-gray .flow-arrow{color:var(--b60)}
+/* problem -> response mapping row */
+.map-row{
+  display:grid;grid-template-columns:1fr 34px 1fr;align-items:center;gap:14px;
+  padding:12px 0;border-bottom:1px solid var(--g20);
+}
+.map-row:last-child{border-bottom:none}
+.s-dark .map-row,.s-mid .map-row{border-bottom-color:rgba(255,255,255,.08)}
+.map-bad,.map-good{display:flex;align-items:center;gap:10px;font-size:clamp(15px,1.3vw,19px);line-height:1.35}
+.map-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.map-link{color:var(--b40);text-align:center;font-size:18px}
+.s-light .map-link,.s-gray .map-link{color:var(--b60)}
+/* huge faded background glyph */
+.bg-glyph{
+  position:absolute;pointer-events:none;z-index:0;
+  font-family:var(--cond);font-weight:700;line-height:.8;
+  font-size:clamp(220px,34vw,460px);
+  color:var(--b60);opacity:.05;
+  right:-2%;bottom:-12%;user-select:none;
+}
+.s-dark .bg-glyph,.s-mid .bg-glyph,.s-blue .bg-glyph,.s-navy .bg-glyph{color:#fff;opacity:.04}
+/* labeled autonomy axis */
+.axis-bar{
+  height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--green) 0%,var(--b40) 50%,var(--red) 100%);
+}
+/* section accent label chip */
+.kchip{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-weight:500;font-size:15px;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--b40);margin-bottom:4px;
+}
+.s-light .kchip,.s-gray .kchip{color:var(--b60)}
+
+/* ─── COUNTER ANIMATION ─── */
+.counter{display:inline-block}
+
+/* ─── LINE REVEALER ─── */
+.line-rev{
+  overflow:hidden;
+}
+.line-rev span{
+  display:inline-block;
+  transform:translateY(100%);
+  transition:transform .6s var(--ease);
+}
+.slide.active .line-rev span{transform:translateY(0)}
+.line-rev:nth-child(2) span{transition-delay:.1s}
+.line-rev:nth-child(3) span{transition-delay:.2s}
+
+/* ─── NAV ─── */
+.nav{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  display:flex;gap:4px;z-index:400;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.nav.show{opacity:1;pointer-events:auto}
+.preview-mode .nav,.preview-mode .chrome-bot{display:none!important}
+.nav button{
+  height:30px;padding:0 12px;border:none;cursor:pointer;
+  background:rgba(0,0,0,.75);color:#f4f4f4;
+  font-family:var(--mono);font-size:11px;letter-spacing:1px;
+  transition:background .15s;
+}
+.nav button:hover{background:var(--b60)}
+
+/* ─── NOTES PANEL ─── */
+.notes-panel{
+  position:fixed;left:0;right:0;bottom:0;
+  background:var(--g100);color:var(--g10);
+  border-top:3px solid var(--b60);
+  transform:translateY(100%);transition:transform .25s var(--ease);
+  z-index:300;height:90vh;max-height:90vh;display:flex;flex-direction:column;
+}
+.notes-panel.open{transform:translateY(0)}
+.notes-head{display:flex;align-items:center;justify-content:space-between;padding:9px 22px;border-bottom:1px solid var(--g90);flex-shrink:0}
+.notes-head span{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.notes-head button{background:none;border:1px solid var(--g80);color:var(--g30);padding:3px 9px;cursor:pointer;font-family:var(--mono);font-size:10px}
+.notes-body{flex:1;overflow-y:auto;padding:22px 28px;display:flex;gap:14px;align-items:flex-start}
+.note-text{flex:1;font-size:21px;line-height:1.6;color:var(--g20);white-space:pre-line}
+.note-input{flex:0 0 300px;display:flex;flex-direction:column;gap:6px}
+.note-input label{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--g70);text-transform:uppercase}
+.note-input textarea{flex:1;min-height:80px;background:var(--black);border:1px solid var(--g90);color:var(--g10);padding:9px 11px;font-family:var(--sans);font-size:13px;resize:none}
+
+/* ─── HELP OVERLAY ─── */
+.help-ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:400}
+.help-ov.open{display:flex}
+.help-box{background:var(--g100);border:1px solid var(--g90);padding:28px 42px;min-width:290px;color:var(--g10)}
+.help-box h4{font-family:var(--cond);font-size:22px;margin-bottom:16px}
+.help-row{display:flex;justify-content:space-between;gap:24px;padding:6px 0;border-bottom:1px solid var(--g90);font-size:13px}
+.help-key{font-family:var(--mono);font-size:11px;color:var(--b40)}
+
+@media(max-width:900px){
+  .chrome,.chrome-bot{padding:11px 22px}
+  h1{font-size:44px}h2{font-size:32px}
+}
+
+</style>
+</head>
+<body>
+<div class="prog" id="prog" style="width:0"></div>
+<div class="deck" id="deck">
+<div class="slide s-dark active" data-notes="[0:00–3:00] Confident, deliberate — let the room settle. 'Good morning. It's an honor to be here with the design community at IBM — a place that has historically defined how enterprise systems operate at scale. We are standing at the edge of a fundamental shift in our craft. Today we explore what happens when the systems we build stop just reacting to clicks and start making decisions. By the end of our 60 minutes, your definition of UX design will permanently expand. We are moving from designing screens to architecting intent.'">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Design Masterclass &nbsp;&#9632;&nbsp; IIT Hyderabad</span>
+  <span class="chrome-r">2026</span>
+</div>
+
+<!-- Decorative geometry -->
+<div class="geo geo-grid" style="inset:0;opacity:.4"></div>
+<div class="geo-line-v geo" style="right:28%;top:0;bottom:0"></div>
+<div class="corner-accent"></div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 60px 20px;position:relative;z-index:1">
+
+  <div style="overflow:hidden;margin-bottom:6px;padding-bottom:.16em">
+    <h1 data-a="2" style="font-size:clamp(84px,11vw,176px);color:#fff;line-height:.95">
+      Architecting
+    </h1>
+  </div>
+  <div style="overflow:hidden;margin-bottom:6px;padding-bottom:.16em">
+    <h1 data-a="3" style="font-size:clamp(84px,11vw,176px);color:var(--b40);line-height:.95">
+      Intent
+    </h1>
+  </div>
+  <div style="overflow:hidden">
+    <h2 data-a="4" style="color:var(--g50);font-weight:300;font-size:clamp(30px,3.4vw,52px)">
+      The Rise of the Agentic Designer
+    </h2>
+  </div>
+
+  <div data-a="5" style="display:flex;align-items:center;gap:28px;margin-top:28px;flex-wrap:wrap">
+    <div style="width:56px;height:2px;background:var(--b60)"></div>
+    <span style="font-family:var(--mono);font-size:19px;color:var(--g50);letter-spacing:1.5px">FROM SCREEN DESIGN TO SYSTEM BEHAVIOR</span>
+    <div style="width:56px;height:2px;background:var(--b60)"></div>
+  </div>
+
+  <div data-a="6" class="tags" style="margin-top:20px">
+    <span class="tag">Generative &#8594; Agentic</span>
+    <span class="tag">Architecting Context</span>
+    <span class="tag">Behavior &amp; Trust Design</span>
+    <span class="tag">Human-in-the-Loop</span>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl"><span class="pulse-dot"></span>Live Session</span>
+  <span class="lbl">01 / 17</span>
+</div>
+</div>
+
+<div class="slide s-gray" data-notes="[3:00–6:00] Warm, conversational, humanizing. 'A quick bit about who's standing in front of you. I'm Tejj. I've spent my career at the intersection of data, writing, and product design. I'm at Microsoft, working across Windows and Health AI — figuring out how these massive systems interact with everyday humans. I host the Nodes of Design podcast and recently published Nodes of Wisdom. Whether I'm mentoring creatives or working on AI education for Telugu-speaking communities, my core passion is democratizing this technology. And when I need to unplug from the matrix, I'm usually out trying — and often failing — to perfect my golf swing.'">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">Speaker Introduction &nbsp;&#9670;&nbsp; About Tejj</span>
+  <span class="chrome-r">02 / 18</span>
+</div>
+
+<div style="display:grid;grid-template-columns:320px 1fr;flex:1;min-height:0;position:relative;overflow:hidden;background:linear-gradient(120deg,rgba(15,98,254,.06),rgba(15,98,254,0) 38%)">
+  <div class="geo geo-dots" style="inset:0;opacity:.14"></div>
+
+  <div data-a="1" style="background:var(--black);color:var(--white);padding:30px 26px;display:flex;flex-direction:column;justify-content:space-between;position:relative;z-index:1;border-right:1px solid var(--g90)">
+    <div>
+      <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--b40);margin-bottom:10px">Featured Speaker</p>
+      <h2 style="font-size:clamp(34px,4.2vw,56px);line-height:.95;color:#fff;margin-bottom:8px">TEJJ</h2>
+      <p style="font-family:var(--cond);font-size:20px;line-height:1.2;color:var(--g30);margin-bottom:14px">Data Artist<br>Writer<br>Product Designer</p>
+      <div style="display:flex;gap:10px;align-items:center;color:var(--b40);font-size:18px">
+        <span>&#9670;</span><span>&#9673;</span><span>&#10022;</span><span>&#10042;</span><span>&#9702;</span>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--g90);padding-top:12px">
+      <p style="font-family:var(--cond);font-size:28px;line-height:1;color:var(--b40);margin-bottom:5px">500+</p>
+      <p style="font-size:14px;color:var(--g30);margin-bottom:9px">Creatives mentored globally</p>
+      <p style="font-family:var(--cond);font-size:28px;line-height:1;color:var(--b40);margin-bottom:5px">2M+</p>
+      <p style="font-size:14px;color:var(--g30)">Views on AI education content</p>
+    </div>
+  </div>
+
+  <div style="padding:28px 52px 20px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;gap:14px">
+    <div data-a="2" class="eyebrow" style="font-size:11px;letter-spacing:2px">About Me</div>
+    <h2 data-a="3" style="max-width:1020px;font-family:var(--sans);font-weight:600;font-size:clamp(44px,4.7vw,68px);line-height:1.06;letter-spacing:-.2px">Tejj is a data artist, writer, and award-winning product designer building intuitive systems for Fortune 500 companies and fast-moving startups.</h2>
+
+    <div data-a="4" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g20)">
+      <div style="background:var(--white);padding:16px 18px;border-top:4px solid var(--b60)">
+        <p style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:7px">Current Role</p>
+        <p style="font-size:18px;line-height:1.45;color:var(--black)">Currently at Microsoft, he designs core Windows experiences and has been instrumental in shaping the design language for Microsoft Health AI.</p>
+      </div>
+      <div style="background:var(--white);padding:16px 18px;border-top:4px solid var(--b60)">
+        <p style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:7px">Public Voice</p>
+        <p style="font-size:18px;line-height:1.45;color:var(--black)">Host of Nodes of Design, India&rsquo;s leading design podcast, with listeners in 60+ countries and frequent talks at UX day, UXDG, Microsoft Design Week, IITs, and universities.</p>
+      </div>
+    </div>
+
+    <div data-a="5" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--g20)">
+      <div style="background:var(--white);padding:14px 18px">
+        <p style="font-size:17px;line-height:1.5;color:var(--black)"><strong>Best-selling author</strong> of Nodes of Wisdom, holder of multiple design and AI patents, and mentor to 500+ creatives while building thriving design and AI communities.</p>
+      </div>
+      <div style="background:var(--white);padding:14px 18px">
+        <p style="font-size:17px;line-height:1.5;color:var(--black)">Driven to make technology inclusive, he is democratizing AI knowledge for Telugu-speaking states, with educational content reaching <strong style="color:var(--b60)">2 million+ views</strong>.</p>
+      </div>
+    </div>
+
+    <div data-a="6" style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:var(--b10);border:1px solid var(--b20)">
+      <p style="font-family:var(--cond);font-size:22px;line-height:1.2;color:var(--black);margin:0">When he is not immersed in design or writing, he can be found perfecting his swing on the golf course.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Speaker Context &#9670; Tejj Profile</span>
+  <span class="lbl">02 / 18</span>
+</div>
+</div>
+
+<div class="slide s-dark" data-notes="[6:00–9:00] Serious, grounding — emphasize the contrast. 'Look at this screen. [pause] We are no longer just designing products. For decades our medium was passive — a user clicks, a product responds. Deterministic. Predictable. But that era is ending. Today we design systems that think, decide, act, and evolve — moving from single static outputs to continuous feedback loops. So ask yourself: when was the last time you designed something that took an action without being explicitly asked?'">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">The Shift</span>
+  <span class="chrome-r">02 / 17</span>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(420px,.95fr);flex:1;min-height:0;position:relative">
+  <!-- Left content -->
+  <div style="padding:32px 56px 24px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1">
+    <div class="geo-dots geo" style="inset:0;opacity:.25"></div>
+
+    <div data-a="1" class="eyebrow">The Design Shift</div>
+    <h2 data-a="2" style="color:#fff;max-width:760px">We are no longer just designing products.</h2>
+    <p data-a="3" class="lead" style="max-width:700px;margin-top:8px">We are designing systems that <strong style="color:var(--b40)">think, decide, act, and evolve.</strong></p>
+
+    <ul data-a="4" class="bl" style="max-width:700px;margin-top:16px">
+      <li>Click-response flows &nbsp;<span style="color:var(--b40)">&#8594;</span>&nbsp; goal-driven workflows</li>
+      <li>Static screens &nbsp;<span style="color:var(--b40)">&#8594;</span>&nbsp; adaptive decision systems</li>
+      <li>Single outputs &nbsp;<span style="color:var(--b40)">&#8594;</span>&nbsp; continuous feedback loops</li>
+    </ul>
+  </div>
+
+  <!-- Right panel -->
+  <div data-ax="1" style="display:grid;grid-template-rows:1fr 1fr;gap:1px;background:var(--g90)">
+    <div style="background:var(--b70);padding:28px 30px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden">
+      <span class="sys-glyph lg ghost" style="position:absolute;top:16px;right:16px;color:rgba(255,255,255,.65)">DOC</span>
+      <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:9px">Before</p>
+      <p style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.2">User clicks.<br>Product responds.</p>
+      <p style="font-size:13px;color:rgba(255,255,255,.4);margin-top:6px">Deterministic. Passive. Predictable.</p>
+    </div>
+    <div style="background:var(--b60);padding:28px 30px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden">
+      <div class="scan" style="opacity:.3"></div>
+      <span class="sys-glyph lg ghost" style="position:absolute;top:16px;right:16px;color:rgba(255,255,255,.72)">AGT</span>
+      <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:9px">Now</p>
+      <p style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.2">System pursues goal.<br>Agent acts + adapts.</p>
+      <p style="font-size:13px;color:rgba(255,255,255,.55);margin-top:6px">Autonomous. Intelligent. Evolving.</p>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Context</span>
+  <span class="lbl">02 / 17</span>
+</div>
+</div>
+
+<div class="slide s-mid" data-notes="[9:00–12:00] Build urgency, faster tempo. 'This is why it matters right now. In 2026 the boundary between designing and building is collapsing. AI isn't just generating wireframes or copy anymore — it's reasoning across complex workflows, writing and testing code, and coordinating across tools in the background. It's a collaborator, not just a generator. The punchline: the designer of tomorrow is not just shaping interfaces — you are shaping intelligence.'">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Why This Matters Now</span>
+  <span class="chrome-r">03 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;padding:22px 60px 16px;min-height:0;position:relative;overflow:hidden">
+  <div data-a="1" class="eyebrow">Why This Matters Now</div>
+  <h2 data-a="2" style="color:#fff;max-width:1380px">The Boundary Between Designing and Building Is Collapsing</h2>
+  <p data-a="3" class="lead" style="margin-bottom:14px;max-width:1120px">In 2026, AI doesn&rsquo;t just generate screens. It reasons across tasks, writes and revises code, coordinates tools, and behaves like a collaborator, not just a generator.</p>
+
+  <div data-a="4" style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--g90);flex:1;min-height:0">
+    <div style="background:var(--g100);padding:18px 20px 16px;display:flex;flex-direction:column;gap:8px;border-top:3px solid var(--b60)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <h4 style="margin:0">Reason</h4>
+        <span class="sys-glyph sm" style="color:var(--b40)">RSN</span>
+      </div>
+      <h3 style="color:var(--g10);margin:0">Across Tasks, Not One Screen</h3>
+      <p style="color:var(--g50);margin-top:2px">Plans multi-step work toward a goal instead of returning one isolated output.</p>
+    </div>
+    <div style="background:var(--g100);padding:18px 20px 16px;display:flex;flex-direction:column;gap:8px;border-top:3px solid var(--b40)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <h4 style="margin:0">Build</h4>
+        <span class="sys-glyph sm" style="color:var(--b40)">DEV</span>
+      </div>
+      <h3 style="color:var(--g10);margin:0">Write, Test, Explain Code</h3>
+      <p style="color:var(--g50);margin-top:2px">Drafts components, tests states, debugs, and explains the changes it made.</p>
+    </div>
+    <div style="background:var(--g100);padding:18px 20px 16px;display:flex;flex-direction:column;gap:8px;border-top:3px solid var(--b40)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <h4 style="margin:0">Coordinate</h4>
+        <span class="sys-glyph sm" style="color:var(--b40)">TOOL</span>
+      </div>
+      <h3 style="color:var(--g10);margin:0">Acts Across Tools</h3>
+      <p style="color:var(--g50);margin-top:2px">Moves across files, APIs, and tools to actually complete real work.</p>
+    </div>
+    <div style="background:var(--g100);padding:18px 20px 16px;display:flex;flex-direction:column;gap:8px;border-top:3px solid var(--b40)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <h4 style="margin:0">Collaborate</h4>
+        <span class="sys-glyph sm" style="color:var(--b40)">COL</span>
+      </div>
+      <h3 style="color:var(--g10);margin:0">A Partner, Not a Generator</h3>
+      <p style="color:var(--g50);margin-top:2px">Works alongside the designer in a loop, not as a one-shot prompt machine.</p>
+    </div>
+  </div>
+
+  <div data-a="5" style="margin-top:1px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(15,98,254,.14);border-left:4px solid var(--b40);padding:12px 16px">
+    <p style="font-family:var(--cond);font-size:22px;line-height:1.2;color:var(--g10);margin:0">The designer of tomorrow is not just shaping interfaces. They are shaping intelligence.</p>
+    <span class="sys-glyph" style="color:var(--b40)">INT</span>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Why This Matters Now</span>
+  <span class="lbl">03 / 17</span>
+</div>
+</div>
+
+<div class="slide s-dark" data-notes="[12:00–15:00] Instructive, clear distinctions — row by row, fast. 'We're moving from the Generative era to the Agentic era. Generative gives outputs: prompt in, result out — reactive, weak memory. Agentic pursues outcomes: goal in, system plans — it carries context, uses tools, self-corrects.' Say it out loud — Generative: 'Here is the landing page copy you asked for.' Agentic: 'I understood the user, drafted the message, built the page, generated the code, tested it, and here are my suggestions for conversion.' It doesn't just react — it pursues.">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Generative &#8594; Agentic</span>
+  <span class="chrome-r">04 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;padding:20px 60px 16px;min-height:0">
+  <div data-a="1" class="eyebrow">The Core Distinction</div>
+  <h2 data-a="2" style="color:#fff;margin-bottom:16px">Generative Gives Outputs. Agentic Pursues Outcomes.</h2>
+
+  <div data-a="3" class="compare" style="flex:1;min-height:0">
+    <div class="compare-col compare-old">
+      <div class="compare-head"><span style="opacity:.5">&#10007;</span> Generative Era</div>
+      <div class="compare-row"><span style="opacity:.35">&#9632;</span> Prompt in, result out</div>
+      <div class="compare-row"><span style="opacity:.35">&#9632;</span> Great for ideation and exploration</div>
+      <div class="compare-row"><span style="opacity:.35">&#9632;</span> Mostly single-step</div>
+      <div class="compare-row"><span style="opacity:.35">&#9632;</span> Reactive: waits for your next prompt</div>
+      <div class="compare-row"><span style="opacity:.35">&#9632;</span> Limited memory of context</div>
+      <div class="compare-row"><span style="opacity:.35">&#9632;</span> Weak ownership of task completion</div>
+    </div>
+    <div class="compare-col compare-new">
+      <div class="compare-head"><span>&#10003;</span> Agentic Era</div>
+      <div class="compare-row"><span class="rmark">&#9670;</span> Goal in, system plans the execution</div>
+      <div class="compare-row"><span class="rmark">&#9670;</span> Reasons across multiple steps</div>
+      <div class="compare-row"><span class="rmark">&#9670;</span> Can use tools to take real action</div>
+      <div class="compare-row"><span class="rmark">&#9670;</span> Remembers and carries context</div>
+      <div class="compare-row"><span class="rmark">&#9670;</span> Checks results and self-corrects</div>
+      <div class="compare-row"><span class="rmark">&#9670;</span> Collaborates with other agents and systems</div>
+    </div>
+  </div>
+
+  <div data-a="4" class="quote" style="margin-top:1px">
+    <p class="quote-text">Generative: &ldquo;Create a landing page.&rdquo; Agentic: &ldquo;Understand the user, define the message, build it, optimize for conversion, generate the code, test it, and suggest improvements.&rdquo;</p>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Generative vs Agentic</span>
+  <span class="lbl">04 / 17</span>
+</div>
+</div>
+
+<div class="slide s-light" data-notes="[15:00–18:00] Pragmatic, business-focused — let each number land with a beat of silence. 'What does this change for an enterprise like IBM? The role expands, and so does the payoff: 50% faster time to working UI, 30% higher team throughput, 20 hours reclaimed per week — and the most important one, 25% fewer errors and escalations. Why? Because every metric on this board reflects a design decision, not just an engineering one. Design better behaviors and the business moves faster.'">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">So What Changes</span>
+  <span class="chrome-r">05 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;padding:20px 60px;min-height:0">
+  <div data-a="1" class="eyebrow">So What Changes for Designers?</div>
+  <h2 data-a="2" style="margin-bottom:0">The Role Expands and So Does the Payoff</h2>
+
+  <!-- Giant stat block -->
+  <div data-a="3" style="display:grid;grid-template-columns:repeat(4,1fr);flex:1;min-height:0;margin-top:20px;gap:1px;background:var(--g20)">
+    <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b60);position:relative;overflow:hidden">
+      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b60);letter-spacing:-3px">50%</div>
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Faster to Working UI</div>
+      <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Architected context lets agents move from intent to interface in roughly half the time</p>
+    </div>
+    <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b60);position:relative;overflow:hidden">
+      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b60);letter-spacing:-3px">30%</div>
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Higher Team Throughput</div>
+      <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Routine production shifts to agents, freeing designers for intent and behavior</p>
+    </div>
+    <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b40);position:relative;overflow:hidden">
+      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b40);letter-spacing:-3px">20h</div>
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Reclaimed per Week</div>
+      <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Repetitive, well-defined tasks delegated to reliable agentic loops</p>
+    </div>
+    <div style="background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:24px 24px 18px;border-bottom:4px solid var(--b40);position:relative;overflow:hidden">
+      <div style="font-family:var(--cond);font-size:clamp(60px,8vw,120px);font-weight:700;line-height:.85;color:var(--b40);letter-spacing:-3px">25%</div>
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--g70);margin-top:10px">Fewer Errors &amp; Escalations</div>
+      <p style="font-size:15px;color:var(--g80);margin-top:5px;line-height:1.4">Confidence signals, guardrails, and recovery states prevent costly dead ends</p>
+    </div>
+  </div>
+
+  <div data-a="4" style="background:var(--b60);padding:12px 22px;margin-top:1px;display:flex;align-items:center;justify-content:space-between;gap:24px">
+    <p style="font-family:var(--cond);font-size:18px;font-weight:700;color:#fff">Every metric above reflects a design decision, not just an engineering one.</p>
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:.5px;line-height:1.4;color:rgba(255,255,255,.72);text-align:right;flex-shrink:0;max-width:230px">Directional figures from AI-assisted product research · McKinsey State of AI &amp; GitHub developer studies</p>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">05 / 17</span>
+</div>
+</div>
+
+<div class="slide s-gray" data-notes="[18:00–23:00] Storytelling mode — lean in. 'It starts with a mindset shift: architecture, not just a clever prompt. A prompt asks for an answer; architecture designs the environment in which that answer becomes reliable. Take the classic doctor bias — a team built a tool, and every time someone asked for an image of a doctor it generated a man; ask for a nurse, a woman. Nobody typed a gender into the prompt, yet the tool decided it anyway. The fix wasn't telling users to write better prompts — it was architecture: layers of constraints, tone, and safety guardrails. The prompt asks the question. The architecture decides who the answer leaves out.' This hits hard — designers shipping generative features today have all seen this exact bias in their own work.">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">The Core Shift</span>
+  <span class="chrome-r">06 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;min-height:0">
+  <!-- Left pane -->
+  <div style="flex:1;padding:24px 40px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--g20)">
+    <div data-a="1" class="eyebrow">Stop Prompting, Start Architecting</div>
+    <h2 data-a="2">Architecture, Not Just a Clever Prompt</h2>
+    <p data-a="3" class="lead" style="margin-bottom:18px">A prompt asks for an answer. <strong>Architecture designs the environment</strong> in which the answer becomes reliable.</p>
+
+    <div data-a="4" style="display:flex;flex-direction:column;gap:1px;background:var(--g20);margin-top:6px">
+      <div style="background:var(--white);padding:18px 20px;border-left:4px solid var(--b60)">
+        <div style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:8px">Context + Memory</div>
+        <p style="font-size:16px;line-height:1.5;color:var(--black)">What the system must know about the user, the goal, and the situation before it acts</p>
+      </div>
+      <div style="background:var(--white);padding:18px 20px;border-left:4px solid var(--b60)">
+        <div style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:8px">Tools + Guardrails</div>
+        <p style="font-size:16px;line-height:1.5;color:var(--black)">What it is allowed to use, and what it must never do without permission</p>
+      </div>
+      <div style="background:var(--white);padding:18px 20px;border-left:4px solid var(--b60)">
+        <div style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin-bottom:8px">Feedback + Success</div>
+        <p style="font-size:16px;line-height:1.5;color:var(--black)">How success is measured, and how it recovers when it gets something wrong</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right diagram -->
+  <div data-ax="1" style="width:340px;flex-shrink:0;padding:24px 22px;background:var(--white);display:flex;flex-direction:column;justify-content:center;gap:10px">
+    <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--g70);margin-bottom:6px">Prompt &#8594; Context Architecture</p>
+    <div style="display:flex;flex-direction:column;gap:1px;background:var(--g20)">
+      <div style="background:var(--g10);padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--g80)">User</span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--b60)">Designer using gen-AI</span>
+      </div>
+      <div style="background:var(--g10);padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--g80)">Goal</span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--b60)">Illustrate &ldquo;a doctor&rdquo;</span>
+      </div>
+      <div style="background:var(--g10);padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--g80)">Constraints</span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--b60)">No default gender</span>
+      </div>
+      <div style="background:var(--g10);padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--g80)">Behavior</span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--b60)">Vary representation</span>
+      </div>
+      <div style="background:var(--g10);padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--g80)">Tone</span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--b60)">Neutral, inclusive</span>
+      </div>
+      <div style="background:var(--b10);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--b60)">
+        <span style="font-size:13px;color:var(--black);font-weight:600">Safety</span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--b60)">Role &ne; gender</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Architecting Context</span>
+  <span class="lbl">06 / 17</span>
+</div>
+</div>
+
+<div class="slide s-blue" data-notes="[23:00–24:00] Reset — take a breath, voice drops to signal the craft section. 'We've covered the why — the shift is here. Now let's talk about the how. How does a designer actually architect these systems? We'll break down how to design intelligent systems to behave, recover, and most importantly earn trust.' Let each of the three preview panels land with a beat of silence.">
+<div class="chrome" style="background:var(--b70);border-bottom:1px solid rgba(255,255,255,.12)">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Section 2 of 4</span>
+  <span class="chrome-r">07 / 17</span>
+</div>
+
+<div class="geo geo-dots" style="inset:0;opacity:.15"></div>
+<div class="scan" style="opacity:.2"></div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 60px;position:relative;z-index:1">
+  <div data-a="1" class="eyebrow" style="color:rgba(255,255,255,.6)">The Designer&rsquo;s Craft</div>
+  <h1 data-a="2" style="color:#fff;max-width:84%;font-size:clamp(44px,6vw,92px)">
+    Designing How Intelligent Systems Behave, Recover, and Earn Trust
+  </h1>
+  <div data-a="3" style="width:480px;height:2px;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.15) 100%);margin:20px 0"></div>
+
+  <div data-a="4" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.15);margin-top:4px">
+    <div style="background:var(--b70);padding:18px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-family:var(--mono);font-size:12px;font-weight:600;color:#fff">01</span>
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--b20)">Framework</span>
+      </div>
+      <div style="font-family:var(--cond);font-size:clamp(17px,1.5vw,22px);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">The 5 Layers of Agentic Design</div>
+    </div>
+    <div style="background:var(--b70);padding:18px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-family:var(--mono);font-size:12px;font-weight:600;color:#fff">02</span>
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--b20)">Responsibility</span>
+      </div>
+      <div style="font-family:var(--cond);font-size:clamp(17px,1.5vw,22px);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">Designing for Trust</div>
+    </div>
+    <div style="background:var(--b70);padding:18px 22px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-family:var(--mono);font-size:12px;font-weight:600;color:#fff">03</span>
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--b20)">Resilience</span>
+      </div>
+      <div style="font-family:var(--cond);font-size:clamp(17px,1.5vw,22px);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap">Designing for Failure</div>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot" style="background:var(--b70);border-top:1px solid rgba(255,255,255,.12)">
+  <span class="lbl">The Designer&rsquo;s Craft</span>
+  <span class="lbl">07 / 17</span>
+</div>
+</div>
+
+<div class="slide s-dark" data-notes="[24:00–29:00] Didactic but energetic — count the layers on your hands. 'Stop designing a feature, start designing a behavior system. Five layers of agentic design: 1) Intent — what is the user's real goal? 2) Context — what does the system need to know to act? 3) Behavior — what steps should it take? 4) Guardrails — what must it never do without permission? 5) Feedback Loop — how does it recover and improve?' Use the Placement Assistant on the right to make it concrete: intent is interview prep, context is their resume and weak spots, behavior is running mock questions, the guardrail is critical — it cannot invent fake achievements or auto-apply to jobs — and the feedback loop tracks their scoring. Five layers turn a feature into a behavior system.">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">The Core Framework</span>
+  <span class="chrome-r">08 / 17</span>
+</div>
+
+<div style="display:flex;flex:1;min-height:0">
+  <!-- Left -->
+  <div style="flex:1;padding:24px 44px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--g90);position:relative;overflow:hidden">
+    <div data-a="1" class="kchip" style="position:relative;z-index:1">The Core Framework</div>
+    <h2 data-a="2" style="color:#fff;position:relative;z-index:1;margin-top:6px">The 5 Layers of Agentic Design</h2>
+    <p data-a="3" class="lead" style="margin:10px 0 18px;max-width:560px;position:relative;z-index:1">A framework for almost any AI product. You stop designing a <strong style="color:var(--b40)">feature</strong> and start designing a <strong style="color:var(--b40)">behavior system.</strong></p>
+
+    <div data-a="4" style="display:flex;flex-direction:column;gap:4px;max-width:640px;position:relative;z-index:1">
+      <div style="display:flex;align-items:center;gap:18px;padding:10px 0">
+        <span class="gnode" style="background:var(--b60)">01</span>
+        <div style="flex:1"><span style="font-family:var(--cond);font-size:26px;font-weight:700;color:#fff">Intent</span><span style="color:var(--g30);font-size:19px"> &nbsp;the real goal, not the surface request</span></div>
+      </div>
+      <div style="width:2px;height:12px;background:var(--b70);margin-left:22px"></div>
+      <div style="display:flex;align-items:center;gap:18px;padding:10px 0">
+        <span class="gnode" style="background:var(--b60)">02</span>
+        <div style="flex:1"><span style="font-family:var(--cond);font-size:26px;font-weight:700;color:#fff">Context</span><span style="color:var(--g30);font-size:19px"> &nbsp;what the system needs to know to act well</span></div>
+      </div>
+      <div style="width:2px;height:12px;background:var(--b70);margin-left:22px"></div>
+      <div style="display:flex;align-items:center;gap:18px;padding:10px 0">
+        <span class="gnode" style="background:var(--b60)">03</span>
+        <div style="flex:1"><span style="font-family:var(--cond);font-size:26px;font-weight:700;color:#fff">Behavior</span><span style="color:var(--g30);font-size:19px"> &nbsp;what it should do, step by step</span></div>
+      </div>
+      <div style="width:2px;height:12px;background:var(--b70);margin-left:22px"></div>
+      <div style="display:flex;align-items:center;gap:18px;padding:10px 0">
+        <span class="gnode" style="background:var(--b60)">04</span>
+        <div style="flex:1"><span style="font-family:var(--cond);font-size:26px;font-weight:700;color:#fff">Guardrails</span><span style="color:var(--g30);font-size:19px"> &nbsp;what it must never do without permission</span></div>
+      </div>
+      <div style="width:2px;height:12px;background:var(--b70);margin-left:22px"></div>
+      <div style="display:flex;align-items:center;gap:18px;padding:10px 0">
+        <span class="gnode" style="background:var(--b60)">05</span>
+        <div style="flex:1"><span style="font-family:var(--cond);font-size:26px;font-weight:700;color:#fff">Feedback Loop</span><span style="color:var(--g30);font-size:19px"> &nbsp;how it learns, recovers, and improves</span></div>
+      </div>
+    </div>
+
+    <div data-a="5" class="quote" style="margin-top:18px;max-width:600px;position:relative;z-index:1">
+      <p class="quote-text" style="color:var(--g20)">Five layers turn a feature into a behavior system.</p>
+    </div>
+  </div>
+
+  <!-- Right: worked example -->
+  <div data-ax="1" style="width:380px;flex-shrink:0;padding:22px 24px;background:var(--g100);display:flex;flex-direction:column;gap:8px;justify-content:center">
+    <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--g70);margin-bottom:4px">Example: Placement Assistant</p>
+    <div class="icon-card s-mid" style="background:var(--g90);border-left:3px solid var(--b40)">
+      <h4>Intent</h4>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--b40)">Prep for interviews in 30 days</p>
+    </div>
+    <div class="icon-card s-mid" style="background:var(--g90);border-left:3px solid var(--b40)">
+      <h4>Context</h4>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--b40)">Resume, role, date, weak areas</p>
+    </div>
+    <div class="icon-card s-mid" style="background:var(--g90);border-left:3px solid var(--b40)">
+      <h4>Behavior</h4>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--b40)">Analyze, plan, run mock Qs</p>
+    </div>
+    <div class="icon-card s-mid" style="background:var(--g90);border-left:3px solid var(--b40)">
+      <h4>Guardrails</h4>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--b40)">No fake wins, no auto-apply</p>
+    </div>
+    <div class="icon-card s-mid" style="background:var(--g90);border-left:3px solid var(--b40)">
+      <h4>Feedback Loop</h4>
+      <p style="font-family:var(--mono);font-size:13px;color:var(--b40)">Track scores, adapt the plan</p>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">5-Layer Framework</span>
+  <span class="lbl">08 / 17</span>
+</div>
+</div>
+
+<div class="slide s-mid" data-notes="[29:00–34:00] Serious, authoritative. 'With autonomous behavior comes risk — designing intelligence means designing trust. Map autonomy to consequence. Green, low risk: routine tasks, the system acts automatically and keeps an activity log. Blue, medium risk: significant impact, the system acts but immediately notifies the user. Red, high risk: irreversible actions, the system halts and requires explicit approval. Every agent must answer four questions: What is it allowed to do? What must be visible? What needs approval? And how does it explain itself when it gets it wrong?'">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Designing Trust</span>
+  <span class="chrome-r">09 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:34px 64px;min-height:0;gap:26px;position:relative">
+
+  <div style="position:relative;z-index:1">
+    <div data-a="1" class="kchip">Human-in-the-Loop &#9632; Autonomy by Consequence</div>
+    <h2 data-a="2" style="color:#fff;margin:10px 0 0">Designing Intelligence Means Designing Trust</h2>
+  </div>
+
+  <!-- Autonomy spectrum -->
+  <div data-a="3" style="position:relative;z-index:1">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+      <div style="background:var(--g100);border:1px solid var(--g90);border-top:4px solid var(--green);padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span class="gnode lg" style="background:var(--green);box-shadow:0 6px 18px rgba(36,161,72,.3)"><span style="display:inline-block;transform:translateY(2px)">&#9650;</span></span>
+          <div>
+            <div style="font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--green);margin-bottom:2px">AUTO</div>
+            <h3 style="color:var(--g10);margin:0;font-size:26px">Low Risk</h3>
+          </div>
+        </div>
+        <p style="font-size:18px;color:var(--g30);line-height:1.5;margin:0">Routine, reversible tasks with known safe patterns.</p>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--green);border-top:1px solid var(--g90);padding-top:14px;margin-top:auto">Inline status &#43; activity log</div>
+      </div>
+      <div style="background:var(--g100);border:1px solid var(--g90);border-top:4px solid var(--b40);padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span class="gnode lg" style="background:var(--b40)"><span style="display:inline-block;transform:translateX(2px)">&#9654;</span></span>
+          <div>
+            <div style="font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--b40);margin-bottom:2px">NOTIFY</div>
+            <h3 style="color:var(--g10);margin:0;font-size:26px">Medium Risk</h3>
+          </div>
+        </div>
+        <p style="font-size:18px;color:var(--g30);line-height:1.5;margin:0">Actions with significant impact that require awareness.</p>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--b40);border-top:1px solid var(--g90);padding-top:14px;margin-top:auto">Toast notification &#43; impact summary</div>
+      </div>
+      <div style="background:var(--g100);border:1px solid var(--g90);border-top:4px solid var(--red);padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span class="gnode lg" style="background:var(--red);box-shadow:0 6px 18px rgba(218,30,40,.3)">&#9632;</span>
+          <div>
+            <div style="font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--red);margin-bottom:2px">APPROVE</div>
+            <h3 style="color:var(--g10);margin:0;font-size:26px">High Risk</h3>
+          </div>
+        </div>
+        <p style="font-size:18px;color:var(--g30);line-height:1.5;margin:0">Irreversible or high-consequence actions that block until consent.</p>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--red);border-top:1px solid var(--g90);padding-top:14px;margin-top:auto">Modal &#43; explicit confirm</div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <div class="axis-bar"></div>
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;letter-spacing:.5px;color:rgba(255,255,255,.55);margin-top:10px">
+        <span>&#9664; Agent acts on its own</span>
+        <span>More consequence &rarr; more human control</span>
+        <span>Human must approve &#9654;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trust questions -->
+  <div data-a="4" style="position:relative;z-index:1;margin-top:16px">
+    <p style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--b40);margin-bottom:14px">Four Questions Every Agent Must Answer</p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+      <div style="display:flex;align-items:baseline;gap:12px;padding-right:24px">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">01</span>
+        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">What is the system <em>allowed</em> to do?</p>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:12px;padding:0 24px;border-left:1px solid rgba(255,255,255,.15)">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">02</span>
+        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">What must always be <em>visible</em> to the user?</p>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:12px;padding:0 24px;border-left:1px solid rgba(255,255,255,.15)">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">03</span>
+        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">What actions need <em>explicit approval</em>?</p>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:12px;padding-left:24px;border-left:1px solid rgba(255,255,255,.15)">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">04</span>
+        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">How does it <em>explain itself</em> when wrong?</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Designing Trust</span>
+  <span class="lbl">09 / 17</span>
+</div>
+</div>
+
+<div class="slide s-light" data-notes="[34:00–37:00] Reassuring — emphasize 'Clarify'. 'And it will get it wrong. In the AI era, good design is about failure states as much as success states. The traditional loop was Detect, Recover. The agentic loop is Detect, Pause, Clarify, Recover, Learn. Wrong assumptions need clarification patterns; hallucinations need a clear fallback state. We don't want fake certainty — we want clear confidence signals. Recovery is a core design skill now, not an engineering afterthought.'">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">Failure &amp; Recovery</span>
+  <span class="chrome-r">10 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 64px;min-height:0;gap:36px">
+  <div>
+    <div data-a="1" class="kchip">A Core Skill</div>
+    <h2 data-a="2" style="margin:10px 0 0">Designing for Failure and Recovery</h2>
+  </div>
+
+  <!-- Recovery loop -->
+  <div data-a="3" style="display:flex;align-items:stretch;gap:0">
+    <div style="flex:1;background:var(--white);border:1px solid var(--g20);border-top:3px solid var(--b60);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+      <span class="gnode">1</span>
+      <div style="font-family:var(--cond);font-weight:700;font-size:22px;color:var(--g100)">Detect</div>
+      <div style="font-size:14px;color:var(--g70);line-height:1.35">Catch wrong assumptions</div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 14px"><span style="font-size:26px;color:var(--g30);font-weight:700">&rarr;</span></div>
+    <div style="flex:1;background:var(--white);border:1px solid var(--g20);border-top:3px solid var(--b60);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+      <span class="gnode">2</span>
+      <div style="font-family:var(--cond);font-weight:700;font-size:22px;color:var(--g100)">Pause</div>
+      <div style="font-size:14px;color:var(--g70);line-height:1.35">Stop before acting</div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 14px"><span style="font-size:26px;color:var(--g30);font-weight:700">&rarr;</span></div>
+    <div style="flex:1;background:var(--b60);border:1px solid var(--b60);border-top:3px solid var(--b60);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;box-shadow:0 10px 30px rgba(15,98,254,.25)">
+      <span class="gnode" style="background:#fff;color:var(--b60);box-shadow:none">3</span>
+      <div style="font-family:var(--cond);font-weight:700;font-size:22px;color:#fff">Clarify</div>
+      <div style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.35">Ask a better question</div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 14px"><span style="font-size:26px;color:var(--g30);font-weight:700">&rarr;</span></div>
+    <div style="flex:1;background:var(--white);border:1px solid var(--g20);border-top:3px solid var(--b60);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+      <span class="gnode">4</span>
+      <div style="font-family:var(--cond);font-weight:700;font-size:22px;color:var(--g100)">Recover</div>
+      <div style="font-size:14px;color:var(--g70);line-height:1.35">Fallback, keep trust</div>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 14px"><span style="font-size:26px;color:var(--g30);font-weight:700">&rarr;</span></div>
+    <div style="flex:1;background:var(--white);border:1px solid var(--g20);border-top:3px solid var(--b60);padding:20px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+      <span class="gnode">5</span>
+      <div style="font-family:var(--cond);font-weight:700;font-size:22px;color:var(--g100)">Learn &#8635;</div>
+      <div style="font-size:14px;color:var(--g70);line-height:1.35">Improve next time</div>
+    </div>
+  </div>
+
+  <!-- Failure -> Response mapping -->
+  <div data-a="4" style="border:1px solid var(--g20)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:16px 32px;background:var(--g10);border-bottom:1px solid var(--g20)">
+      <span style="font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--red)">&#9632; FAILURE MODE</span>
+      <span style="font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--b60)">&#9650; DESIGNED RESPONSE</span>
+    </div>
+    <div style="padding:8px 32px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:16px 0;border-bottom:1px solid var(--g20)">
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></span>Wrong assumptions about the user</span>
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--b60);flex-shrink:0"></span>Clarification patterns before acting</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:16px 0;border-bottom:1px solid var(--g20)">
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></span>Overconfident actions taken too early</span>
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--b60);flex-shrink:0"></span>Confidence signals, not fake certainty</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:16px 0;border-bottom:1px solid var(--g20)">
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></span>Hallucinated or fabricated answers</span>
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--b60);flex-shrink:0"></span>Clear fallback states when unsure</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:48px;padding:16px 0">
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></span>Silent errors that erode user trust</span>
+        <span style="display:flex;align-items:center;gap:12px;font-size:18px;color:var(--g90)"><span style="width:10px;height:10px;border-radius:50%;background:var(--b60);flex-shrink:0"></span>Escalation paths to a human</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Designing for Failure</span>
+  <span class="lbl">10 / 17</span>
+</div>
+</div>
+
+<div class="slide s-dark" data-notes="[37:00–45:00] High energy — switch to the demo. 'Enough theory — let's see it in practice. Watch how this agent turns a new hire's role into a personalized onboarding journey. First the input: role, manager, start date, tools. Now the reasoning layer — it isn't just generating text, it's mapping tool approvals, building a 30-day ramp plan, scheduling intros, and flagging blockers. Finally the output: access requests prepped, not just suggested. Notice where the design lives — not in the final UI, but in how the agent was instructed to decide. That is architecting intent.'">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Live Demo &nbsp;&#9632;&nbsp; 8 Minutes</span>
+  <span class="chrome-r">11 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;position:relative;gap:18px">
+  <div class="geo-grid geo" style="inset:0;opacity:.3"></div>
+
+  <div style="position:relative;z-index:1">
+    <div data-a="1" class="kchip" style="color:var(--b40)"><span class="pulse-dot"></span>Live Demo</div>
+    <h2 data-a="2" style="color:#fff;margin:8px 0 0">Agent Turns a New Hire&rsquo;s Role Into a Personalized Onboarding Journey</h2>
+  </div>
+
+  <div data-a="3" style="display:grid;grid-template-columns:1fr 56px 1.12fr 56px 1fr;align-items:stretch;gap:0;position:relative;z-index:1">
+    <div style="background:var(--g100);border:1px solid var(--g90);border-top:3px solid var(--b40);padding:20px 22px;display:flex;flex-direction:column;justify-content:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode">01</span>
+        <div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--g50)">INPUT</div>
+          <h3 style="color:var(--g10);margin:0">New Hire Inputs</h3>
+        </div>
+      </div>
+      <ul class="bl" style="margin-top:0;font-size:15px">
+        <li>Role + team + manager</li>
+        <li>Start date + tools needed</li>
+        <li>Access level + skill gaps</li>
+      </ul>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--b40)">
+      <span style="font-size:30px;font-weight:700;line-height:1">&rarr;</span>
+      <span style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.45);margin-top:5px">feeds</span>
+    </div>
+    <div style="background:var(--b60);border:1px solid var(--b40);padding:20px 22px;display:flex;flex-direction:column;justify-content:center;gap:12px;box-shadow:0 0 50px rgba(15,98,254,.45);position:relative;overflow:hidden">
+      <div class="geo-dots geo" style="inset:0;opacity:.18"></div>
+      <div style="display:flex;align-items:center;gap:12px;position:relative;z-index:1">
+        <span class="gnode" style="background:#fff;color:var(--b60)">02</span>
+        <div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.7)">AGENT REASONING</div>
+          <h3 style="color:#fff;margin:0">Thinks It Through</h3>
+        </div>
+      </div>
+      <ul class="bl" style="margin-top:0;font-size:15px;position:relative;z-index:1">
+        <li>Map required tools and approvals</li>
+        <li>Build a 30-day ramp plan</li>
+        <li>Schedule intros + flag blockers</li>
+      </ul>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--b40)">
+      <span style="font-size:30px;font-weight:700;line-height:1">&rarr;</span>
+      <span style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.45);margin-top:5px">delivers</span>
+    </div>
+    <div style="background:var(--g100);border:1px solid var(--g90);border-top:3px solid var(--green);padding:20px 22px;display:flex;flex-direction:column;justify-content:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode" style="background:var(--green);box-shadow:0 6px 18px rgba(36,161,72,.3)">03</span>
+        <div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--g50)">OUTPUT</div>
+          <h3 style="color:var(--g10);margin:0">Deliverables</h3>
+        </div>
+      </div>
+      <ul class="bl" style="margin-top:0;font-size:15px">
+        <li>Personalized onboarding plan</li>
+        <li>Access requests prepared</li>
+        <li>Progress + readiness view</li>
+      </ul>
+    </div>
+  </div>
+
+  <div data-a="4" class="quote" style="margin:0;position:relative;z-index:1">
+    <p class="quote-text">The designer's work lives not in the output, but in how the agent was instructed to decide.</p>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Live Demo</span>
+  <span class="lbl">11 / 17</span>
+</div>
+</div>
+
+<div class="slide s-blue" data-notes="[45:00–55:00] Engaging, interactive — get the room moving. 'Your turn — 10 minutes to map an agent journey. Scenario: you're back from a week off with 200 unread emails, 12 meeting invites, and 3 urgent tasks. A Workplace Assistant offers to clear the backlog. Look at it through three lenses — You, the Assistant, the System. Sketch a 6-step flow. Mark one action it can do automatically and one it must ask you about first. Then design the undo button. Go.' [Timebox: 2 min scenario, 6 min sketch, 2 min share — walk the room. Everyone has felt the post-vacation inbox flood.]">
+<div class="chrome" style="background:var(--b70);border-bottom:1px solid rgba(255,255,255,.12)">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Mini-Workshop &nbsp;&#9632;&nbsp; 10 Minutes</span>
+  <span class="chrome-r">12 / 17</span>
+</div>
+
+<div class="geo-dots geo" style="inset:0;opacity:.12"></div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;position:relative;z-index:1;gap:22px">
+  <div>
+    <div data-a="1" class="kchip" style="color:rgba(255,255,255,.7)"><span class="pulse-dot"></span>Interactive &#9632; 10 Minutes</div>
+    <h2 data-a="2" style="color:#fff;margin:8px 0 0">Map an Agent Journey: The Workplace Assistant</h2>
+  </div>
+
+  <div data-a="3" style="display:flex;align-items:center;gap:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-left:4px solid #fff;padding:16px 22px">
+    <span style="font-family:var(--cond);font-size:40px;line-height:1;flex-shrink:0">&#9888;</span>
+    <div>
+      <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.6);margin-bottom:5px">SCENARIO</p>
+      <p style="font-size:18px;line-height:1.5;color:#fff">You are back from a week off and open your laptop to <strong>200 unread emails</strong>, <strong>12 meeting invites</strong>, and <strong>3 tasks marked urgent</strong>. A workplace assistant offers to clear the backlog for you. <strong>What should it handle on its own, what should it ask you about, and how should it show you what it did?</strong></p>
+    </div>
+  </div>
+
+  <div data-a="4" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+    <div style="background:var(--b70);border-top:3px solid #fff;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);box-shadow:none;font-size:14px">YOU</span>
+        <div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--b20)">Lens 01</div>
+          <h3 style="color:#fff;margin:0">You</h3>
+        </div>
+      </div>
+      <p style="font-size:17px;color:rgba(255,255,255,.82);line-height:1.5;margin:0">What do they see first? What feels safe to let go of?</p>
+    </div>
+    <div style="background:var(--b70);border-top:3px solid #fff;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);box-shadow:none;font-size:14px">AGT</span>
+        <div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--b20)">Lens 02</div>
+          <h3 style="color:#fff;margin:0">Assistant</h3>
+        </div>
+      </div>
+      <p style="font-size:17px;color:rgba(255,255,255,.82);line-height:1.5;margin:0">What does it clear on its own, and what does it hold back?</p>
+    </div>
+    <div style="background:var(--b70);border-top:3px solid #fff;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.5);box-shadow:none;font-size:14px">SYS</span>
+        <div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--b20)">Lens 03</div>
+          <h3 style="color:#fff;margin:0">System</h3>
+        </div>
+      </div>
+      <p style="font-size:17px;color:rgba(255,255,255,.82);line-height:1.5;margin:0">What signals decide what is urgent versus noise?</p>
+    </div>
+  </div>
+
+  <div data-a="5" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+    <div style="display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:14px 16px">
+      <span class="gnode sm" style="background:#fff;color:var(--b60)">1</span>
+      <p style="font-size:14px;color:#fff;line-height:1.4">Sketch a 6-step user&ndash;agent flow in swimlanes (You / Agent / System)</p>
+    </div>
+    <div style="display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:14px 16px">
+      <span class="gnode sm" style="background:#fff;color:var(--b60)">2</span>
+      <p style="font-size:14px;color:#fff;line-height:1.4">Mark one action it can do automatically and one it must ask about first</p>
+    </div>
+    <div style="display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:14px 16px">
+      <span class="gnode sm" style="background:#fff;color:var(--b60)">3</span>
+      <p style="font-size:14px;color:#fff;line-height:1.4">Design how it shows you a summary of what it changed</p>
+    </div>
+    <div style="display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:14px 16px">
+      <span class="gnode sm" style="background:#fff;color:var(--b60)">4</span>
+      <p style="font-size:14px;color:#fff;line-height:1.4">Add one undo: how can you reverse something the agent got wrong?</p>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot" style="background:var(--b70);border-top:1px solid rgba(255,255,255,.12)">
+  <span class="lbl"><span class="pulse-dot"></span>Sketch on paper or whiteboard</span>
+  <span class="lbl">12 / 17</span>
+</div>
+</div>
+
+<div class="slide s-gray" data-notes="[55:00–58:00] Validating, reflective. 'Bring it back. Walking around I saw incredible thinking — and the patterns you gravitated to are exactly what makes world-class agentic design: 1) Ownership — explicit at every step about who's in control. 2) Risk tiering — autonomy based on the consequence of deleting an email versus accepting a meeting. 3) Rationale — the agent explains why it prioritized a task. 4) Recovery — you designed the undo upfront. You're already thinking like agentic designers.'">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">Workshop Debrief</span>
+  <span class="chrome-r">13 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:18px;position:relative">
+  <div class="bg-glyph">&#10003;</div>
+  <div style="position:relative;z-index:1;text-align:center">
+    <div data-a="1" class="kchip" style="justify-content:center">What Strong Agent Journeys Include</div>
+    <h2 data-a="2" style="margin:8px 0 0">Patterns From the Best Designs</h2>
+  </div>
+
+  <div data-a="3" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--g20);position:relative;z-index:1">
+    <div style="background:var(--white);border-top:4px solid var(--b60);padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="gnode" style="background:var(--b60)">01</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--b60)">OWNERSHIP</span>
+      </div>
+      <h3 style="margin:0">Explicit at Every Step</h3>
+      <p style="color:var(--g80);font-size:15px;line-height:1.5;margin:0">Each action has a clear owner, human or agent. No ambiguity at handoff.</p>
+    </div>
+    <div style="background:var(--white);border-top:4px solid var(--green);padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="gnode" style="background:var(--green);box-shadow:0 6px 18px rgba(36,161,72,.3)">02</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--green)">RISK TIER</span>
+      </div>
+      <h3 style="margin:0">Autonomy by Consequence</h3>
+      <p style="color:var(--g80);font-size:15px;line-height:1.5;margin:0">Auto for low risk. Notify for medium. Explicit consent for high.</p>
+    </div>
+    <div style="background:var(--white);border-top:4px solid var(--orange);padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="gnode" style="background:var(--orange);box-shadow:0 6px 18px rgba(255,131,43,.3)">03</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--orange)">RATIONALE</span>
+      </div>
+      <h3 style="margin:0">Visible Before Action</h3>
+      <p style="color:var(--g80);font-size:15px;line-height:1.5;margin:0">User always knows <em>why</em> before the agent does something significant.</p>
+    </div>
+    <div style="background:var(--white);border-top:4px solid var(--red);padding:22px 20px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="gnode" style="background:var(--red);box-shadow:0 6px 18px rgba(218,30,40,.3)">04</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--red)">RECOVERY</span>
+      </div>
+      <h3 style="margin:0">Designed Upfront</h3>
+      <p style="color:var(--g80);font-size:15px;line-height:1.5;margin:0">Rollback defined before the feature ships, not post-incident.</p>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">13 / 17</span>
+</div>
+</div>
+
+<div class="slide s-dark" data-notes="[58:00–60:00] Empowering, expansive. 'One thing to be clear about: the craft expands, it is not replaced. Your visual design, interaction craft, and journey mapping all stay. We're adding a new toolkit on top: Context and Trust design, Behavior mapping, Systems thinking. The tools are evolving, and so are we.'">
+<div class="chrome">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">The New Toolkit</span>
+  <span class="chrome-r">14 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:16px;position:relative">
+  <div class="bg-glyph">+</div>
+  <div style="position:relative;z-index:1">
+    <div data-a="1" class="kchip" style="color:var(--b40)">The Craft Expands &#8212; It Is Not Replaced</div>
+    <h2 data-a="2" style="color:#fff;margin:8px 0 0">The Designer&rsquo;s New Toolkit</h2>
+  </div>
+
+  <!-- Skill stack -->
+  <div data-a="3" style="display:flex;flex-direction:column;gap:10px;position:relative;z-index:1">
+    <div style="display:grid;grid-template-columns:110px 1fr;align-items:center;gap:22px;background:rgba(15,98,254,.18);border-left:5px solid var(--b40);padding:18px 24px">
+      <span style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-align:center;color:var(--b40);border:1px solid var(--b40);padding:6px 0">+ NEW</span>
+      <div style="display:flex;align-items:baseline;gap:18px;flex-wrap:wrap">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:#fff">Context &amp; Trust</span>
+        <span style="color:rgba(255,255,255,.7);font-size:19px">What it knows, and how it&rsquo;s evaluated</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:110px 1fr;align-items:center;gap:22px;background:rgba(15,98,254,.18);border-left:5px solid var(--b40);padding:18px 24px">
+      <span style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-align:center;color:var(--b40);border:1px solid var(--b40);padding:6px 0">+ NEW</span>
+      <div style="display:flex;align-items:baseline;gap:18px;flex-wrap:wrap">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:#fff">Behavior Design</span>
+        <span style="color:rgba(255,255,255,.7);font-size:19px">What the system does, and decides</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:110px 1fr;align-items:center;gap:22px;background:rgba(15,98,254,.18);border-left:5px solid var(--b40);padding:18px 24px">
+      <span style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-align:center;color:var(--b40);border:1px solid var(--b40);padding:6px 0">+ NEW</span>
+      <div style="display:flex;align-items:baseline;gap:18px;flex-wrap:wrap">
+        <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:#fff">Systems Thinking</span>
+        <span style="color:rgba(255,255,255,.7);font-size:19px">How the parts behave over time</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:110px 1fr;align-items:center;gap:22px;background:rgba(255,255,255,.05);border-left:5px solid var(--g70);padding:18px 24px">
+      <span style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-align:center;color:var(--g50);border:1px solid var(--g70);padding:6px 0">KEPT</span>
+      <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+        <span style="font-family:var(--cond);font-size:28px;font-weight:700;color:rgba(255,255,255,.78)">Journeys</span>
+        <span style="color:var(--b40);font-size:22px;font-weight:700">&#8658;</span>
+        <span style="color:rgba(255,255,255,.88);font-size:22px">Flows + Service Blueprints</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:110px 1fr;align-items:center;gap:22px;background:rgba(255,255,255,.05);border-left:5px solid var(--g70);padding:18px 24px">
+      <span style="font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-align:center;color:var(--g50);border:1px solid var(--g70);padding:6px 0">KEPT</span>
+      <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+        <span style="font-family:var(--cond);font-size:28px;font-weight:700;color:rgba(255,255,255,.78)">Visual Design</span>
+        <span style="color:var(--b40);font-size:22px;font-weight:700">&#8658;</span>
+        <span style="color:rgba(255,255,255,.88);font-size:22px">Interface + Interaction Craft</span>
+      </div>
+    </div>
+  </div>
+
+  <div data-a="4" class="tags" style="margin-top:8px;position:relative;z-index:1">
+    <span class="tag">Systems Thinking</span>
+    <span class="tag">Workflow Design</span>
+    <span class="tag">Behavior Design</span>
+    <span class="tag">Context Framing</span>
+    <span class="tag">Trust Design</span>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">The New Toolkit</span>
+  <span class="lbl">14 / 17</span>
+</div>
+</div>
+
+<div class="slide s-light" data-notes="[60:00–62:00] Visionary peak — slow down, let each shift land with a silent beat. 'We're moving from drawing pixels to designing parameters, rules, and guardrails. Pixels become parameters. Screens become rules. Interactions become guardrails. Flows become behavior contracts. You're now encoding behavior boundaries, designing confidence signals and escalation triggers. My promise: in this new era the role of the designer becomes more important, not less. The craft doesn't shrink — it scales.'">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">The Future Designer</span>
+  <span class="chrome-r">15 / 17</span>
+</div>
+
+<div style="display:flex;flex:1;min-height:0">
+  <!-- Left -->
+  <div style="flex:1;padding:28px 44px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--g20);position:relative;overflow:hidden">
+    <div class="bg-glyph" style="color:var(--b60);opacity:.05">&#9670;</div>
+    <div data-a="1" class="kchip" style="position:relative;z-index:1">Vision</div>
+    <h2 data-a="2" style="font-size:clamp(28px,4vw,52px);position:relative;z-index:1;margin-top:8px">From Drawing Pixels to Designing Parameters, Rules, and Guardrails</h2>
+    <div data-a="3" style="width:300px;height:3px;background:linear-gradient(90deg,var(--b60) 0%,rgba(15,98,254,.15) 100%);margin:14px 0;position:relative;z-index:1"></div>
+    <ul data-a="4" class="bl" style="position:relative;z-index:1;font-size:17px">
+      <li>Encode behavior boundaries and escalation triggers</li>
+      <li>Design confidence communication and uncertainty signals</li>
+      <li>Specify cross-agent collaboration contracts</li>
+      <li>Instrument feedback loops and outcome metrics</li>
+    </ul>
+    <div data-a="5" class="quote" style="margin-top:16px;position:relative;z-index:1">
+      <p class="quote-text">The role becomes more important, not less.</p>
+    </div>
+  </div>
+
+  <!-- Right: material shift list -->
+  <div data-ax="1" style="width:360px;flex-shrink:0;padding:28px 24px;background:var(--g10);display:flex;flex-direction:column;justify-content:center">
+    <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--b60);margin-bottom:16px">Design Material Shift</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--white);border-left:4px solid var(--b60);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px;text-decoration:line-through;color:var(--g70)">Pixels</span>
+          <span style="color:var(--b60);font-size:20px;font-weight:700">&#8594;</span>
+          <span style="font-family:var(--cond);font-size:22px;font-weight:700;color:var(--b60)">Parameters</span>
+        </div>
+      </div>
+      <div style="background:var(--white);border-left:4px solid var(--b60);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px;text-decoration:line-through;color:var(--g70)">Screens</span>
+          <span style="color:var(--b60);font-size:20px;font-weight:700">&#8594;</span>
+          <span style="font-family:var(--cond);font-size:22px;font-weight:700;color:var(--b60)">Rules</span>
+        </div>
+      </div>
+      <div style="background:var(--white);border-left:4px solid var(--b60);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px;text-decoration:line-through;color:var(--g70)">Interactions</span>
+          <span style="color:var(--b60);font-size:20px;font-weight:700">&#8594;</span>
+          <span style="font-family:var(--cond);font-size:22px;font-weight:700;color:var(--b60)">Guardrails</span>
+        </div>
+      </div>
+      <div style="background:var(--white);border-left:4px solid var(--b60);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px;text-decoration:line-through;color:var(--g70)">Flows</span>
+          <span style="color:var(--b60);font-size:20px;font-weight:700">&#8594;</span>
+          <span style="font-family:var(--cond);font-size:22px;font-weight:700;color:var(--b60)">Behavior Contracts</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:18px;background:var(--b60);padding:16px 18px">
+      <p style="font-family:var(--cond);font-size:19px;font-weight:700;color:#fff">The craft doesn&rsquo;t shrink. It scales.</p>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">15 / 17</span>
+</div>
+</div>
+
+<div class="slide s-gray" data-notes="[62:00–63:00] Crisp, summarizing. 'Let's tie it together. We started with the Big Shift — from passive clicks to pursuing goals. We looked at Architecting Context — why architecture beats a prompt every time. We explored Trust and Failure — autonomy balanced with consequence and recovery. And we defined the Agentic Designer — your new toolkit for the era of intelligence.' Commitment ask: 'Which one workflow will you map as an agent journey this quarter?'">
+<div class="chrome">
+  <span class="chrome-l" style="color:var(--b60)"></span>
+  <span class="chrome-c">Session Recap</span>
+  <span class="chrome-r">16 / 17</span>
+</div>
+
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:20px;position:relative">
+  <div class="bg-glyph" style="color:var(--b60);opacity:.05">&#9654;</div>
+  <div style="position:relative;z-index:1">
+    <div data-a="1" class="kchip">What We Covered</div>
+    <h2 data-a="2" style="margin:8px 0 0">From Prompting Outputs to Designing Intent</h2>
+  </div>
+
+  <div data-a="3" style="display:flex;align-items:stretch;justify-content:center;position:relative;z-index:1">
+    <div style="flex:1;background:var(--white);border-top:4px solid var(--b60);padding:20px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode">01</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b60)">PART ONE</span>
+      </div>
+      <h3 style="margin:0">The Big Shift</h3>
+      <p style="font-size:14px;color:var(--g80);line-height:1.45;margin:0">Designing and building collapse; generative gives way to agentic.</p>
+    </div>
+    <span class="flow-arrow" style="align-self:center;padding:0 6px;color:var(--b40)">&#8594;</span>
+    <div style="flex:1;background:var(--white);border-top:4px solid var(--b60);padding:20px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode">02</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b60)">PART TWO</span>
+      </div>
+      <h3 style="margin:0">Architecting Context</h3>
+      <p style="font-size:14px;color:var(--g80);line-height:1.45;margin:0">Stop prompting, start architecting, then the five layers.</p>
+    </div>
+    <span class="flow-arrow" style="align-self:center;padding:0 6px;color:var(--b40)">&#8594;</span>
+    <div style="flex:1;background:var(--white);border-top:4px solid var(--b60);padding:20px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode">03</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b60)">PART THREE</span>
+      </div>
+      <h3 style="margin:0">Trust &amp; Failure</h3>
+      <p style="font-size:14px;color:var(--g80);line-height:1.45;margin:0">Design trust, recovery, and human-in-the-loop control.</p>
+    </div>
+    <span class="flow-arrow" style="align-self:center;padding:0 6px;color:var(--b40)">&#8594;</span>
+    <div style="flex:1;background:var(--white);border-top:4px solid var(--b60);padding:20px 18px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="gnode">04</span>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b60)">PART FOUR</span>
+      </div>
+      <h3 style="margin:0">The Agentic Designer</h3>
+      <p style="font-size:14px;color:var(--g80);line-height:1.45;margin:0">A new role and toolkit that shapes intelligence, not just screens.</p>
+    </div>
+  </div>
+</div>
+
+<div class="chrome-bot">
+  <span class="lbl">Actionable Close</span>
+  <span class="lbl">16 / 17</span>
+</div>
+</div>
+
+<div class="slide s-navy" data-notes="[63:00–65:00] Slow, impactful finish — don't rush, quote stays on screen. 'I'll leave you with this. For our entire careers, design has been about what a user sees. Moving forward, design is about what a system understands. On screen are resources from Anthropic, Nielsen Norman Group, and your own IBM Carbon guidelines to keep exploring. It's been a privilege to share this shift with you today. Thank you, IBM — I'd love to open the floor for Q&A.' [Smile. Open posture. Long pause before Q&A.]">
+<div class="chrome" style="background:var(--b80);border-bottom:1px solid rgba(255,255,255,.1)">
+  <span class="chrome-l"></span>
+  <span class="chrome-c">Closing</span>
+  <span class="chrome-r">17 / 17</span>
+</div>
+
+<div class="geo-grid geo" style="inset:0;opacity:.2"></div>
+<div class="corner-accent"></div>
+
+<div style="display:flex;flex-direction:column;flex:1;min-height:0;position:relative;z-index:1;padding:40px 64px;justify-content:center;gap:32px;overflow:hidden">
+  <div class="bg-glyph">&#9670;</div>
+
+  <!-- Thank you -->
+  <div style="position:relative;z-index:1">
+    <div data-a="1" class="kchip" style="color:var(--b40)">Thank You</div>
+    <h1 data-a="2" style="color:#fff;max-width:90%;font-size:clamp(34px,4.4vw,64px);margin-top:8px">
+      Design is no longer only about what a user sees.
+      <span style="color:var(--b40)">It is about what a system understands.</span>
+    </h1>
+    <div data-a="3" style="width:420px;height:3px;background:linear-gradient(90deg,var(--b40),transparent);margin:18px 0 0"></div>
+  </div>
+
+  <!-- Resources -->
+  <div data-a="4" style="position:relative;z-index:1">
+    <p style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--b40);margin-bottom:16px">Keep Exploring &#8212; Resources to Read More</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <a href="https://www.anthropic.com/news/building-effective-agents" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-left:3px solid var(--b40);padding:18px 20px;display:block">
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b40);margin-bottom:8px">ARTICLE</div>
+        <div style="font-family:var(--cond);font-size:21px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px">Building Effective Agents</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.45">Patterns for designing reliable agentic systems.</div>
+      </a>
+      <a href="https://www.nngroup.com/articles/ai-paradigm/" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-left:3px solid var(--b40);padding:18px 20px;display:block">
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b40);margin-bottom:8px">RESEARCH</div>
+        <div style="font-family:var(--cond);font-size:21px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px">AI: The New UX Paradigm</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.45">Nielsen Norman Group on intent-based outcomes.</div>
+      </a>
+      <a href="https://carbondesignsystem.com/" target="_blank" rel="noopener" style="text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-left:3px solid var(--b40);padding:18px 20px;display:block">
+        <div style="font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--b40);margin-bottom:8px">TOOLKIT</div>
+        <div style="font-family:var(--cond);font-size:21px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:6px">IBM Carbon for AI</div>
+        <div style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.45">Patterns and guidelines for designing AI experiences.</div>
+      </a>
+    </div>
+  </div>
+
+  <p data-a="5" style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:1">Agentic Design &nbsp;&#9632;&nbsp; Open for Q&amp;A &nbsp;&#9632;&nbsp; Thank You, IBM</p>
+</div>
+
+<div class="chrome-bot" style="background:var(--b80);border-top:1px solid rgba(255,255,255,.1)">
+  <span class="lbl" style="color:rgba(255,255,255,.35)"><span class="pulse-dot"></span>Q&amp;A Open</span>
+  <span class="lbl" style="color:rgba(255,255,255,.35)">17 / 17</span>
+</div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prev()">&#8592; Prev</button>
+  <button onclick="openPresenter()">Present [P]</button>
+  <button onclick="toggleNotes()">Notes [N]</button>
+  <button onclick="next()">Next &#8594;</button>
+  <button onclick="toggleHelp()">? Help</button>
+</div>
+
+<!-- Notes panel -->
+<div class="notes-panel" id="np">
+  <div class="notes-head">
+    <span>Speaker Notes &middot; Slide <span id="ns">1</span>/<span id="ntot">17</span></span>
+    <button onclick="toggleNotes()">Close [N]</button>
+  </div>
+  <div class="notes-body">
+    <div class="note-text" id="nt"></div>
+    <div class="note-input">
+      <label>Your Notes</label>
+      <textarea id="pn" placeholder="Personal notes..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Help overlay -->
+<div class="help-ov" id="hp">
+  <div class="help-box">
+    <h4>Keyboard Shortcuts</h4>
+    <div class="help-row"><span>Next slide</span><span class="help-key">&#8594; / Space</span></div>
+    <div class="help-row"><span>Prev slide</span><span class="help-key">&#8592;</span></div>
+    <div class="help-row"><span>First / Last</span><span class="help-key">Home / End</span></div>
+    <div class="help-row"><span>Speaker Notes</span><span class="help-key">N</span></div>
+    <div class="help-row"><span>Toolbar</span><span class="help-key">I</span></div>
+    <div class="help-row"><span>Presenter window</span><span class="help-key">P</span></div>
+    <div class="help-row"><span>Fullscreen</span><span class="help-key">F</span></div>
+    <div class="help-row"><span>Close panels</span><span class="help-key">Esc</span></div>
+    <div style="margin-top:12px;text-align:right">
+      <button onclick="toggleHelp()" style="background:var(--b60);border:none;color:#fff;padding:6px 14px;cursor:pointer;font-family:var(--mono);font-size:11px">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Motion (motiondivision/motion) for slide transitions -->
+<script type="module">
+  async function loadMotion() {
+    try {
+      return await import('./vendor/motion.min.js');           // local, offline-capable
+    } catch (e) {
+      return await import('https://cdn.jsdelivr.net/npm/motion@11.11.13/+esm'); // CDN fallback
+    }
+  }
+  try {
+    const m = await loadMotion();
+    window.__motionAnimate = m.animate;
+  } catch (e) { /* fallback to CSS transitions */ }
+</script>
+
+<script>
+
+const S   = document.querySelectorAll('.slide');
+const P   = document.getElementById('prog');
+const NP  = document.getElementById('np');
+const NT  = document.getElementById('nt');
+const NS  = document.getElementById('ns');
+const NTT = document.getElementById('ntot');
+const PN  = document.getElementById('pn');
+const HP  = document.getElementById('hp');
+const NAV = document.querySelector('.nav');
+const T   = S.length;
+let c     = 0;
+let busy  = false;
+
+/* ── Presenter window sync (BroadcastChannel) ── */
+let presenterWin = null;
+const PREVIEW = new URLSearchParams(location.search).has('preview');
+const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('ibm_deck') : null;
+
+if (PREVIEW) document.documentElement.classList.add('preview-mode');
+
+function slideTitle(i) {
+  const h = S[i] && S[i].querySelector('h1, h2');
+  return h ? h.textContent.replace(/\s+/g, ' ').trim() : '';
+}
+
+function broadcast() {
+  if (!chan || PREVIEW) return;
+  chan.postMessage({
+    type:  'state',
+    slide: c,
+    total: T,
+    title: slideTitle(c),
+    notes: (S[c].dataset.notes || ''),
+    nextTitle: (c + 1 < T) ? slideTitle(c + 1) : '',
+    nextNotes: (c + 1 < T) ? (S[c + 1].dataset.notes || '') : ''
+  });
+}
+
+if (chan) {
+  chan.onmessage = (e) => {
+    const m = e.data || {};
+    if (PREVIEW) {
+      // Follower: mirror whatever slide the presenter is on.
+      if (m.type === 'state' && typeof m.slide === 'number' && m.slide !== c) {
+        go(m.slide, m.slide > c ? 1 : -1);
+      }
+      return;
+    }
+    if (m.type === 'nav') {
+      if (m.action === 'next') next();
+      else if (m.action === 'prev') prev();
+      else if (m.action === 'go' && typeof m.slide === 'number') go(m.slide, m.slide > c ? 1 : -1);
+    } else if (m.type === 'request') {
+      broadcast();
+    }
+  };
+}
+
+function openPresenter() {
+  presenterWin = window.open('console.html', 'ibm_presenter', 'width=1100,height=720');
+  // Give the new window a moment to subscribe, then push current state.
+  setTimeout(broadcast, 400);
+}
+
+function syncSlideCounters() {
+  const total = String(T).padStart(2, '0');
+  S.forEach((slide, i) => {
+    const idx = String(i + 1).padStart(2, '0');
+    const chromeCounter = slide.querySelector('.chrome-r');
+    if (chromeCounter && /\d/.test(chromeCounter.textContent)) {
+      chromeCounter.textContent = `${idx} / ${total}`;
+    }
+    const bottomLabels = slide.querySelectorAll('.chrome-bot .lbl');
+    if (bottomLabels.length > 0) {
+      const trailing = bottomLabels[bottomLabels.length - 1];
+      if (/\d/.test(trailing.textContent)) {
+        trailing.textContent = `${idx} / ${total}`;
+      }
+    }
+  });
+  if (NTT) NTT.textContent = T;
+}
+
+function go(n, dir) {
+  if (n < 0 || n >= T || busy) return;
+  busy = true;
+
+  const cur = S[c];
+  const nxt = S[n];
+  const animate = window.__motionAnimate;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const finish = () => {
+    cur.classList.remove('active', 'exit-fwd', 'exit-back', 'enter-fwd', 'enter-back');
+    cur.style.display = '';
+    cur.style.opacity = '';
+    cur.style.transform = '';
+    cur.style.zIndex = '';
+    nxt.style.zIndex = '';
+    c = n;
+    P.style.width = ((c + 1) / T * 100) + '%';
+    upN();
+    try { localStorage.setItem('ibm_slide', c); } catch (e) {}
+    busy = false;
+  };
+
+  // Bring the next slide in on top and (re)trigger its child reveal animations.
+  cur.style.zIndex = '1';
+  nxt.style.zIndex = '2';
+  nxt.style.display = 'flex';
+  nxt.offsetHeight; // reflow so child [data-a] transitions replay
+  nxt.classList.add('active');
+
+  if (animate && !reduce) {
+    const d = dir > 0 ? 90 : -90;
+    const easeOut = [0.22, 0.61, 0.36, 1];
+    const easeIn  = [0.4, 0.0, 0.2, 1];
+    animate(nxt, { opacity: [0, 1], x: [d, 0] }, { duration: 0.55, easing: easeOut });
+    const out = animate(cur, { opacity: [1, 0], x: [0, -d * 0.6] }, { duration: 0.45, easing: easeIn });
+    (out.finished || Promise.resolve()).then(finish);
+  } else {
+    // Fallback: instant swap (reduced motion) or no-Motion crossfade via CSS.
+    nxt.classList.add(dir > 0 ? 'enter-fwd' : 'enter-back');
+    setTimeout(() => { nxt.classList.remove('enter-fwd', 'enter-back'); finish(); }, reduce ? 0 : 420);
+  }
+}
+
+function next() { go(c + 1, 1); }
+function prev() { go(c - 1, -1); }
+
+function upN() {
+  NT.textContent = S[c].dataset.notes || '';
+  NS.textContent = c + 1;
+  try { PN.value = localStorage.getItem('ibm_note_' + c) || ''; } catch(e) {}
+  broadcast();
+}
+
+function toggleNotes() { NP.classList.toggle('open'); }
+function toggleHelp()  { HP.classList.toggle('open'); }
+function toggleNav()   { if (NAV) NAV.classList.toggle('show'); }
+
+PN.addEventListener('input', () => {
+  try { localStorage.setItem('ibm_note_' + c, PN.value); } catch(e) {}
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA') { if (e.key === 'Escape') e.target.blur(); return; }
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown': case ' ': e.preventDefault(); next(); break;
+    case 'ArrowLeft':  case 'ArrowUp':             e.preventDefault(); prev(); break;
+    case 'Home':  e.preventDefault(); go(0, -1);       break;
+    case 'End':   e.preventDefault(); go(T - 1, 1);    break;
+    case 'n': case 'N': toggleNotes(); break;
+    case 'p': case 'P': openPresenter(); break;
+    case 'i': case 'I': toggleNav(); break;
+    case 'f': case 'F':
+      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+      break;
+    case '?': toggleHelp(); break;
+    case 'Escape':
+      if (NP.classList.contains('open')) toggleNotes();
+      if (HP.classList.contains('open')) toggleHelp();
+      NAV.classList.remove('show');
+      break;
+  }
+});
+
+// Touch swipe
+let tx = 0;
+document.addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+document.addEventListener('touchend',   e => {
+  const d = tx - e.changedTouches[0].clientX;
+  if (Math.abs(d) > 60) d > 0 ? next() : prev();
+});
+
+// Restore position
+syncSlideCounters();
+try {
+  const sv = parseInt(localStorage.getItem('ibm_slide'), 10);
+  if (!isNaN(sv) && sv > 0 && sv < T) {
+    c = sv;
+    S[0].classList.remove('active');
+    S[c].classList.add('active');
+    P.style.width = ((c + 1) / T * 100) + '%';
+  }
+} catch(e) {}
+upN();
+
+// In preview mode, ask the presenter deck for the current slide so we stay in sync.
+if (PREVIEW && chan) {
+  chan.postMessage({ type: 'request' });
+  setTimeout(() => chan.postMessage({ type: 'request' }), 500);
+}
+
+</script>
+</body>
+</html>
+
