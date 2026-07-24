@@ -173,7 +173,19 @@ body{font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--blac
   background-image:radial-gradient(rgba(15,98,254,.18) 1px,transparent 1px);
   background-size:28px 28px;
 }
-.geo-line-v{width:1px;background:linear-gradient(to bottom,transparent,rgba(15,98,254,.4),transparent)}
+.geo-line-v{width:3px;background:linear-gradient(to bottom,transparent,rgba(69,137,255,.7),transparent);position:relative;overflow:hidden}
+.geo-line-v::after{
+  content:'';
+  position:absolute;left:0;right:0;
+  top:-40%;height:40%;
+  background:linear-gradient(to bottom,transparent,rgba(180,210,255,1),transparent);
+  box-shadow:0 0 24px 6px rgba(120,169,255,1);
+  animation:lineTravel 3.2s linear infinite;
+}
+@keyframes lineTravel{
+  0%{top:-40%}
+  100%{top:100%}
+}
 .geo-line-h{height:1px;background:linear-gradient(to right,transparent,rgba(15,98,254,.4),transparent)}
 
 /* Pulsing dot */
@@ -1402,7 +1414,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <span class="chrome-r">13 / 17</span>
 </div>
 
-<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:18px;position:relative">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:40px;position:relative">
   <div class="bg-glyph">&#10003;</div>
   <div style="position:relative;z-index:1;text-align:center">
     <div data-a="1" class="kchip" style="justify-content:center">What Strong Agent Journeys Include</div>
@@ -1596,7 +1608,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <span class="chrome-r">16 / 17</span>
 </div>
 
-<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:20px;position:relative">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:40px;position:relative">
   <div class="bg-glyph" style="color:var(--b60);opacity:.05">&#9654;</div>
   <div style="position:relative;z-index:1">
     <div data-a="1" class="kchip">What We Covered</div>
@@ -1693,7 +1705,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
     </div>
   </div>
 
-  <p data-a="5" style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:1">Agentic Design &nbsp;&#9632;&nbsp; Open for Q&amp;A &nbsp;&#9632;&nbsp; Thank You, IBM</p>
+  <p data-a="5" style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:1">Agentic Design &nbsp;&#9632;&nbsp; Open for Q&amp;A &nbsp;&#9632;&nbsp; Thank You, All!</p>
 </div>
 
 <div class="chrome-bot" style="background:var(--b80);border-top:1px solid rgba(255,255,255,.1)">

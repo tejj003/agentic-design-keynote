@@ -173,7 +173,19 @@ body{font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--blac
   background-image:radial-gradient(rgba(15,98,254,.18) 1px,transparent 1px);
   background-size:28px 28px;
 }
-.geo-line-v{width:1px;background:linear-gradient(to bottom,transparent,rgba(15,98,254,.4),transparent)}
+.geo-line-v{width:3px;background:linear-gradient(to bottom,transparent,rgba(69,137,255,.7),transparent);position:relative;overflow:hidden}
+.geo-line-v::after{
+  content:'';
+  position:absolute;left:0;right:0;
+  top:-40%;height:40%;
+  background:linear-gradient(to bottom,transparent,rgba(180,210,255,1),transparent);
+  box-shadow:0 0 24px 6px rgba(120,169,255,1);
+  animation:lineTravel 3.2s linear infinite;
+}
+@keyframes lineTravel{
+  0%{top:-40%}
+  100%{top:100%}
+}
 .geo-line-h{height:1px;background:linear-gradient(to right,transparent,rgba(15,98,254,.4),transparent)}
 
 /* Pulsing dot */
@@ -631,7 +643,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
     </div>
 
     <div style="border-top:1px solid var(--g90);padding-top:12px">
-      <p style="font-family:var(--cond);font-size:28px;line-height:1;color:var(--b40);margin-bottom:5px">500+</p>
+      <p style="font-family:var(--cond);font-size:28px;line-height:1;color:var(--b40);margin-bottom:5px">1000+</p>
       <p style="font-size:14px;color:var(--g30);margin-bottom:9px">Creatives mentored globally</p>
       <p style="font-family:var(--cond);font-size:28px;line-height:1;color:var(--b40);margin-bottom:5px">2M+</p>
       <p style="font-size:14px;color:var(--g30)">Views on AI education content</p>
@@ -644,19 +656,19 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
 
     <div data-a="4" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--g20);flex:1;min-height:0">
       <div style="background:var(--white);padding:0 32px;display:flex;flex-direction:column;justify-content:center;gap:12px;border-top:4px solid var(--b60)">
-        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0">Current Role</p>
+        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0;font-weight:700">Current Role</p>
         <p style="font-size:23px;line-height:1.5;color:var(--black);margin:0">Currently at Microsoft, he designs core Windows experiences and has been instrumental in shaping the design language for Microsoft Health AI.</p>
       </div>
       <div style="background:var(--white);padding:0 32px;display:flex;flex-direction:column;justify-content:center;gap:12px;border-top:4px solid var(--b60)">
-        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0">Public Voice</p>
+        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0;font-weight:700">Public Voice</p>
         <p style="font-size:23px;line-height:1.5;color:var(--black);margin:0">Host of Nodes of Design, India&rsquo;s leading design podcast, with listeners in 60+ countries and frequent talks at UX day, UXDG, Microsoft Design Week, IITs, and universities.</p>
       </div>
       <div style="background:var(--white);padding:0 32px;display:flex;flex-direction:column;justify-content:center;gap:12px;border-top:4px solid var(--b40)">
-        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0">Recognition</p>
-        <p style="font-size:23px;line-height:1.5;color:var(--black);margin:0"><strong>Best-selling author</strong> of Nodes of Wisdom, holder of multiple design and AI patents, and mentor to 500+ creatives.</p>
+        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0;font-weight:700">Recognition</p>
+        <p style="font-size:23px;line-height:1.5;color:var(--black);margin:0">Best-selling author of Nodes of Wisdom, holder of multiple design and AI patents, and mentor to 1000+ creatives.</p>
       </div>
       <div style="background:var(--white);padding:0 32px;display:flex;flex-direction:column;justify-content:center;gap:12px;border-top:4px solid var(--b40)">
-        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0">Mission</p>
+        <p style="font-family:var(--mono);font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:var(--b60);margin:0;font-weight:700">Mission</p>
         <p style="font-size:23px;line-height:1.5;color:var(--black);margin:0">Democratizing AI knowledge for Telugu-speaking states, with educational content reaching <strong style="color:var(--b60)">2 million+ views</strong>.</p>
       </div>
     </div>
@@ -703,14 +715,14 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
       <span class="sys-glyph lg ghost" style="position:absolute;top:16px;right:16px;color:rgba(255,255,255,.65)">DOC</span>
       <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:9px">Before</p>
       <p style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.2">User clicks.<br>Product responds.</p>
-      <p style="font-size:13px;color:rgba(255,255,255,.4);margin-top:6px">Deterministic. Passive. Predictable.</p>
+      <p style="font-size:18px;color:rgba(255,255,255,.4);margin-top:6px">Deterministic. Passive. Predictable.</p>
     </div>
     <div style="background:var(--b60);padding:28px 30px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden">
       <div class="scan" style="opacity:.3"></div>
       <span class="sys-glyph lg ghost" style="position:absolute;top:16px;right:16px;color:rgba(255,255,255,.72)">AGT</span>
       <p style="font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:9px">Now</p>
       <p style="font-family:var(--cond);font-size:22px;font-weight:700;color:#fff;line-height:1.2">System pursues goal.<br>Agent acts + adapts.</p>
-      <p style="font-size:13px;color:rgba(255,255,255,.55);margin-top:6px">Autonomous. Intelligent. Evolving.</p>
+      <p style="font-size:18px;color:rgba(255,255,255,.55);margin-top:6px">Autonomous. Intelligent. Evolving.</p>
     </div>
   </div>
 </div>
@@ -1130,19 +1142,19 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
       <div style="display:flex;align-items:baseline;gap:12px;padding-right:24px">
         <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">01</span>
-        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">What is the system <em>allowed</em> to do?</p>
+        <p style="font-size:22px;color:var(--g20);line-height:1.4;margin:0">What is the system <em>allowed</em> to do?</p>
       </div>
       <div style="display:flex;align-items:baseline;gap:12px;padding:0 24px;border-left:1px solid rgba(255,255,255,.15)">
         <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">02</span>
-        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">What must always be <em>visible</em> to the user?</p>
+        <p style="font-size:22px;color:var(--g20);line-height:1.4;margin:0">What must always be <em>visible</em> to the user?</p>
       </div>
       <div style="display:flex;align-items:baseline;gap:12px;padding:0 24px;border-left:1px solid rgba(255,255,255,.15)">
         <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">03</span>
-        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">What actions need <em>explicit approval</em>?</p>
+        <p style="font-size:22px;color:var(--g20);line-height:1.4;margin:0">What actions need <em>explicit approval</em>?</p>
       </div>
       <div style="display:flex;align-items:baseline;gap:12px;padding-left:24px;border-left:1px solid rgba(255,255,255,.15)">
         <span style="font-family:var(--cond);font-size:30px;font-weight:700;color:var(--b40)">04</span>
-        <p style="font-size:17px;color:var(--g20);line-height:1.4;margin:0">How does it <em>explain itself</em> when wrong?</p>
+        <p style="font-size:22px;color:var(--g20);line-height:1.4;margin:0">How does it <em>explain itself</em> when wrong?</p>
       </div>
     </div>
   </div>
@@ -1402,7 +1414,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <span class="chrome-r">13 / 17</span>
 </div>
 
-<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:18px;position:relative">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:40px;position:relative">
   <div class="bg-glyph">&#10003;</div>
   <div style="position:relative;z-index:1;text-align:center">
     <div data-a="1" class="kchip" style="justify-content:center">What Strong Agent Journeys Include</div>
@@ -1596,7 +1608,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
   <span class="chrome-r">16 / 17</span>
 </div>
 
-<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:20px;position:relative">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 60px;min-height:0;gap:40px;position:relative">
   <div class="bg-glyph" style="color:var(--b60);opacity:.05">&#9654;</div>
   <div style="position:relative;z-index:1">
     <div data-a="1" class="kchip">What We Covered</div>
@@ -1693,7 +1705,7 @@ h4{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:up
     </div>
   </div>
 
-  <p data-a="5" style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:1">Agentic Design &nbsp;&#9632;&nbsp; Open for Q&amp;A &nbsp;&#9632;&nbsp; Thank You, IBM</p>
+  <p data-a="5" style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:1">Agentic Design &nbsp;&#9632;&nbsp; Open for Q&amp;A &nbsp;&#9632;&nbsp; Thank You, All!</p>
 </div>
 
 <div class="chrome-bot" style="background:var(--b80);border-top:1px solid rgba(255,255,255,.1)">
